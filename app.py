@@ -42,7 +42,7 @@ def run_analysis(pdf_path: str):
 
 uploaded_file = st.file_uploader("Choisir un PDF", type="pdf")
 
-st.write("Ou bien sélectionnez un rapport PDF d'exemple pour lancer l'analyse immédiatement.")
+st.write("Ou bien sélectionnez un rapport PDF d'exemple pour lancer l'analyse immédiatement (ou téléchargez-le) :")
 
 sample_dir = os.path.join(project_root, "sample_reports")
 
@@ -74,13 +74,34 @@ example_reports = {
     for label, filename in sample_files.items()
 }
 
+# Création des colonnes principales pour accueillir chaque exemple
 cols = st.columns(len(example_reports))
 selected_example = None
 selected_example_label = None
+
 for col, (label, path) in zip(cols, example_reports.items()):
-    if col.button(label):
-        selected_example = path
-        selected_example_label = label
+    with col:
+        # Création de sous-colonnes internes pour coller l'icône de téléchargement à droite du bouton
+        sub_col1, sub_col2 = st.columns([3, 1])
+        
+        with sub_col1:
+            if st.button(label, use_container_width=True):
+                selected_example = path
+                selected_example_label = label
+                
+        with sub_col2:
+            # Si le fichier existe, on propose son téléchargement direct
+            if path and os.path.exists(path):
+                with open(path, "rb") as f:
+                    st.download_button(
+                        label="📥",
+                        data=f.read(),
+                        file_name=os.path.basename(path),
+                        mime="application/pdf",
+                        key=f"dl_{label}" # Clé Streamlit unique par bouton
+                    )
+            else:
+                st.caption("❌")
 
 result = None
 

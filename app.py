@@ -22,6 +22,35 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
+# Injection CSS pour le cercle de chargement personnalisé
+st.markdown(
+    """
+    <style>
+    .loading-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+    .custom-spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #00E5FF;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("Assistant IA — Analyse Financière Multi-Agents")
 st.write("Déposez un rapport financier PDF. 3 agents IA l'analysent en séquence.")
 
@@ -32,16 +61,36 @@ with st.sidebar:
     st.write("3. Agent Rédacteur (LangGraph + Groq)")
 
 def run_analysis(pdf_path: str):
-    # st.status génère un cercle de chargement qui tourne pendant l'analyse
+    # st.status génère un cercle de chargement global autour du bloc
     with st.status("Traitement du document par les agents IA...", expanded=True) as status:
-        st.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
-        st.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
-        st.write("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
+        
+        # Initialisation des placeholders dynamiques
+        timer_placeholder = st.empty()
+        step1_placeholder = st.empty()
+        step2_placeholder = st.empty()
+        step3_placeholder = st.empty()
 
+        # Affichage pendant l'analyse (Cercle en mouvement)
+        timer_placeholder.markdown(
+            '<div class="loading-container">⏳ Temps de chargement estimé : 12 secondes <span class="custom-spinner"></span></div>', 
+            unsafe_allow_html=True
+        )
+        
+        step1_placeholder.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
+        step2_placeholder.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
+        step3_placeholder.write("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
+
+        # Appel réel de l'architecture multi-agents
         input_state: AgentState = {"pdf_path": pdf_path}
         result = graph.invoke(input_state)
         
-        # Le statut passe en "complete" : le cercle s'arrête et devient une icône de validation
+        # Remplacement après analyse (Cercle remplacé par une coche de validation)
+        timer_placeholder.markdown(
+            '<div class="loading-container">✅ Temps de chargement estimé : 12 secondes (Terminé)</div>', 
+            unsafe_allow_html=True
+        )
+        
+        # Le statut passe en "complete" : le cercle Streamlit par défaut s'arrête également
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
 
     return result
@@ -166,7 +215,7 @@ def render_dynamic_content_with_strict_two_charts(analysis_text, summary_text, r
     for idx, line in enumerate(lines):
         if "---SECTION_BREAK---" in line:
             st.markdown("---")
-            st.subheader("✍️ Synthèse Exécutive pour le Comité de Direction")
+            st.subheader("✍️ Synthèse Executive pour le Comité de Direction")
             continue
             
         is_tag = any(tag in line for tag in ["[GRAPH_EVOLUTION]", "[GRAPH_REPARTITION]", "[GRAPH_PERFORMANCE]"])

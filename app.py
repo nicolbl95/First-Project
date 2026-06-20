@@ -62,7 +62,7 @@ def apply_premium_layout(fig, title_text):
             y=0.95
         ),
         template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)", # Totalement transparent pour fusionner avec Streamlit
+        paper_bgcolor="rgba(0,0,0,0)", 
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=20, t=60, b=40),
         font=dict(family="Inter, sans-serif", color="#B0B3B8"),
@@ -80,142 +80,121 @@ def apply_premium_layout(fig, title_text):
             font_family="Inter, sans-serif"
         )
     )
-    # Épurer les axes (retirer les bordures lourdes)
-    fig.update_xaxes(
-        showgrid=False, 
-        linecolor="rgba(255,255,255,0.1)", 
-        zeroline=False
-    )
-    fig.update_yaxes(
-        showgrid=True, 
-        gridcolor=THEME_COLORS["grid_color"], 
-        zeroline=False,
-        linecolor="rgba(255,255,255,0.1)"
-    )
+    fig.update_xaxes(showgrid=False, linecolor="rgba(255,255,255,0.1)", zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor=THEME_COLORS["grid_color"], zeroline=False, linecolor="rgba(255,255,255,0.1)")
 
-# Génération dynamique des graphs selon ce que l'IA demande et le rapport actif
+# Génération des graphiques - Changement de style et de sujet strict par rapport
 def display_requested_chart(chart_type, report_label, key):
     if report_label not in ["BioSensus 2025", "TechNova", "OmniDrive"]:
         report_label = "OmniDrive"
 
-    if chart_type == "[GRAPH_EVOLUTION]":
+    # STYLE 1 : Histogramme / Barres (Sujet : Croissance, Marges ou Performance brute)
+    if chart_type == "STYLE_BARRES":
         fig = go.Figure()
         if report_label == "OmniDrive":
             fig.add_trace(go.Bar(
-                x=['2024', '2025'], 
-                y=[48.12, 62.45], 
-                text=['48.12 M€', '62.45 M€'], 
-                textposition='auto', 
-                marker=dict(color=THEME_COLORS["primary"], cornerradius=8), # Coins arrondis
+                x=['2024', '2025'], y=[48.12, 62.45], 
+                text=['48.12 M€', '62.45 M€'], textposition='auto', 
+                marker=dict(color=THEME_COLORS["primary"], cornerradius=8),
                 hovertemplate="<b>Année %{x}</b><br>CA : %{y} M€<extra></extra>"
             ))
-            title = "📈 Trajectoire & Croissance du Chiffre d'Affaires"
+            title = "📈 Style Barres : Trajectoire & Croissance du Chiffre d'Affaires"
         elif report_label == "TechNova":
-            fig.add_trace(go.Scatter(
-                x=['2024', '2025', 'Prévisions 2026'], 
-                y=[59.3, 84.15, 120.0], 
-                mode='lines+markers', 
-                line=dict(color=THEME_COLORS["warning"], width=4, shape="spline"), # Courbe lissée premium
-                marker=dict(size=8, color="#FFFFFF", line=dict(color=THEME_COLORS["warning"], width=2)),
-                hovertemplate="<b>%{x}</b><br>Revenus : %{y} M€<extra></extra>"
-            ))
-            title = "📉 Trajectoire de Croissance Pluriannuelle"
-        elif report_label == "BioSensus 2025":
-            fig.add_trace(go.Bar(
-                x=['2024', '2025'], 
-                y=[24.1, 32.02], 
-                marker=dict(color=THEME_COLORS["success"], cornerradius=8),
-                text=['24.10 M€', '32.02 M€'],
-                textposition='auto'
-            ))
-            title = "📊 Évolution de la Marge Brute Capturée"
-        
-        apply_premium_layout(fig, title)
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
-
-    elif chart_type == "[GRAPH_REPARTITION]":
-        if report_label == "OmniDrive":
-            labels = ['SaaS Cloud (Abonnements)', 'Matériel & Intégration Usines']
-            values = [28.90, 33.55]
-            colors = [THEME_COLORS["primary"], THEME_COLORS["secondary"]]
-            title = "🎯 Ventilation Matrix : SaaS vs Matériel"
-        elif report_label == "TechNova":
-            labels = ['Dette Bancaire Long Terme', 'Avances Étatiques Bpifrance']
-            values = [22.0, 9.5]
-            colors = [THEME_COLORS["danger"], THEME_COLORS["warning"]]
-            title = "🔍 Structure Globale de l'Endettement"
-        elif report_label == "BioSensus 2025":
-            labels = ['Capitaux Propres', 'Dette Globale']
-            values = [31.2, 22.5]
-            colors = [THEME_COLORS["success"], THEME_COLORS["danger"]]
-            title = "🏛️ Équilibre de Financement (Capitaux vs Dettes)"
-
-        fig = px.pie(
-            values=values, 
-            names=labels, 
-            hole=0.55, # Effet Donut élégant
-            color_discrete_sequence=colors
-        )
-        fig.update_traces(
-            textposition='outside', 
-            textinfo='percent+label',
-            insidetextorientation='radial'
-        )
-        apply_premium_layout(fig, title)
-        fig.update_layout(showlegend=False) # Masque la légende redondante en bas
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
-
-    elif chart_type == "[GRAPH_PERFORMANCE]":
-        fig = go.Figure()
-        if report_label == "TechNova":
             categories = ['Marge Brute', 'R&D Investissements', 'EBITDA']
             values = [32.14, 18.5, 12.91]
             fig.add_trace(go.Bar(
-                x=categories, 
-                y=values, 
+                x=categories, y=values, 
                 marker=dict(color=[THEME_COLORS["primary"], THEME_COLORS["secondary"], THEME_COLORS["success"]], cornerradius=6),
-                text=[f"{v} M€" for v in values],
-                textposition='auto'
+                text=[f"{v} M€" for v in values], textposition='auto'
             ))
-            title = "⚡ Indicateurs de Performance Opérationnelle"
+            title = "⚡ Style Barres : Indicateurs de Performance Opérationnelle"
         elif report_label == "BioSensus 2025":
             categories = ['Marge Brute', 'EBITDA Ajusté', 'Résultat Opérationnel (EBIT)']
             values = [32.02, 14.15, 8.92]
             fig.add_trace(go.Bar(
-                x=categories, 
-                y=values, 
+                x=categories, y=values, 
                 marker=dict(color=[THEME_COLORS["success"], THEME_COLORS["warning"], THEME_COLORS["primary"]], cornerradius=6),
-                text=[f"{v} M€" for v in values],
-                textposition='auto'
+                text=[f"{v} M€" for v in values], textposition='auto'
             ))
-            title = "📈 Soldes Intermédiaires de Gestion & Marges"
-        else:
-            return
+            title = "📊 Style Barres : Soldes Intermédiaires de Gestion & Marges"
         
         apply_premium_layout(fig, title)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
 
-# Fonction magique qui découpe le texte pour y insérer les graphs là où l'IA l'a demandé
-def render_dynamic_content(text_block, report_label, section_prefix):
-    if not text_block:
-        return
-    
-    # On découpe le texte par ligne
-    lines = text_block.split("\n")
-    for idx, line in enumerate(lines):
-        # On crée une clé unique basée sur la section et le numéro de ligne
-        chart_key = f"{section_prefix}_chart_{idx}"
-        
-        # Si la ligne contient une balise graphique demandée par l'IA
-        if "[GRAPH_EVOLUTION]" in line:
-            display_requested_chart("[GRAPH_EVOLUTION]", report_label, chart_key)
-        elif "[GRAPH_REPARTITION]" in line:
-            display_requested_chart("[GRAPH_REPARTITION]", report_label, chart_key)
-        elif "[GRAPH_PERFORMANCE]" in line:
-            display_requested_chart("[GRAPH_PERFORMANCE]", report_label, chart_key)
+    # STYLE 2 : Donut / Courbe Lissée (Sujet : Répartition analytique ou Évolution pluriannuelle)
+    elif chart_type == "STYLE_DONUT_OU_LIGNE":
+        if report_label == "TechNova":
+            # Pour TechNova on utilise une ligne temporelle pour trancher radicalement avec les barres
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=['2024', '2025', 'Prévisions 2026'], y=[59.3, 84.15, 120.0], 
+                mode='lines+markers', line=dict(color=THEME_COLORS["warning"], width=4, shape="spline"),
+                marker=dict(size=8, color="#FFFFFF", line=dict(color=THEME_COLORS["warning"], width=2)),
+                hovertemplate="<b>%{x}</b><br>Revenus : %{y} M€<extra></extra>"
+            ))
+            title = "📉 Style Courbe : Trajectoire Spécifique de Croissance Pluriannuelle"
+            apply_premium_layout(fig, title)
         else:
-            # Sinon on affiche le texte normal en Markdown
+            # Pour OmniDrive et BioSensus on applique un Donut de structure financière
+            if report_label == "OmniDrive":
+                labels = ['SaaS Cloud (Abonnements)', 'Matériel & Intégration Usines']
+                values = [28.90, 33.55]
+                colors = [THEME_COLORS["primary"], THEME_COLORS["secondary"]]
+                title = "🎯 Style Donut : Ventilation Matrix (SaaS vs Matériel)"
+            else:  # BioSensus 2025
+                labels = ['Capitaux Propres', 'Dette Globale']
+                values = [31.2, 22.5]
+                colors = [THEME_COLORS["success"], THEME_COLORS["danger"]]
+                title = "🏛️ Style Donut : Équilibre du Financement"
+
+            fig = px.pie(values=values, names=labels, hole=0.55, color_discrete_sequence=colors)
+            fig.update_traces(textposition='outside', textinfo='percent+label')
+            apply_premium_layout(fig, title)
+            fig.update_layout(showlegend=False)
+            
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
+
+# Gestionnaire de rendu intelligent global
+def render_dynamic_content_with_strict_two_charts(analysis_text, summary_text, report_label):
+    # Regrouper le texte pour analyser le placement des balises
+    full_text = f"{analysis_text}\n---SECTION_BREAK---\n{summary_text}"
+    lines = full_text.split("\n")
+    
+    charts_rendered = 0
+    
+    for idx, line in enumerate(lines):
+        if "---SECTION_BREAK---" in line:
+            st.markdown("---")
+            st.subheader("✍️ Synthèse Exécutive pour le Comité de Direction")
+            continue
+            
+        # Détecter si la ligne est une balise de l'IA
+        is_tag = any(tag in line for tag in ["[GRAPH_EVOLUTION]", "[GRAPH_REPARTITION]", "[GRAPH_PERFORMANCE]"])
+        
+        if is_tag:
+            chart_key = f"dynamic_chart_strict_{idx}"
+            if charts_rendered == 0:
+                display_requested_chart("STYLE_BARRES", report_label, chart_key)
+                charts_rendered += 1
+            elif charts_rendered == 1:
+                display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, chart_key)
+                charts_rendered += 1
+            # Si charts_rendered >= 2, on ignore les balises en trop pour respecter la règle de 2 maximum.
+        else:
+            if idx == 0 and "---SECTION_BREAK---" not in lines[0]:
+                st.subheader("🕵️‍♂️ Rapport Spécifique d'Analyse des Risques")
             st.markdown(line)
+
+    # Sécurité : Si l'IA n'a pas mis assez de balises, on force l'affichage des graphiques manquants à la fin
+    if charts_rendered < 2:
+        st.markdown("---")
+        st.caption("📊 *Éléments visuels complémentaires requis par le protocole financier :*")
+        c1, c2 = st.columns(2)
+        if charts_rendered == 0:
+            with c1: display_requested_chart("STYLE_BARRES", report_label, "force_chart_1")
+            with c2: display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, "force_chart_2")
+        elif charts_rendered == 1:
+            display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, "force_chart_2")
 
 
 uploaded_file = st.file_uploader("Choisir un PDF", type="pdf")
@@ -276,12 +255,9 @@ if result is not None:
     active_report = st.session_state.get("active_label")
     st.markdown("---")
     
-    # 1. Rendu dynamique de la section Risques (avec préfixe de clé "analysis")
-    st.subheader("🕵️‍♂️ Rapport Spécifique d'Analyse des Risques")
-    render_dynamic_content(result.get("analysis"), active_report, "analysis")
-    
-    st.markdown("---")
-    
-    # 2. Rendu dynamique de la section Synthèse (avec préfixe de clé "summary")
-    st.subheader("✍️ Synthèse Exécutive pour le Comité de Direction")
-    render_dynamic_content(result.get("summary"), active_report, "summary")
+    # Appel unifié de la fonction de rendu strict (Analyse + Synthèse imbriquée)
+    render_dynamic_content_with_strict_two_charts(
+        result.get("analysis", ""), 
+        result.get("summary", ""), 
+        active_report
+    )

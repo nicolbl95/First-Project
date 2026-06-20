@@ -24,51 +24,30 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du CSS gérant la piste de course et le défilement du Sprite
+# Injection du style CSS pour le déplacement linéaire sur la piste
 st.markdown(
     """
     <style>
-    /* Piste de course */
     .jogging-track {
         width: 100%;
         position: relative;
-        height: 80px;
+        height: 70px;
         margin-top: 15px;
         overflow: hidden;
         background: transparent;
         border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
     }
-    
-    /* Déplacement global de gauche à droite */
     .runner-container {
         position: absolute;
-        bottom: 0px;
+        bottom: 5px;
         left: 0;
         animation: traverse 6s linear infinite;
     }
-    
-    /* VRAIE ANIMATION DE COURSE (Décomposition image par image via Sprite) */
-    .animated-runner {
-        width: 64px;
-        height: 64px;
-        background-image: url('https://openclipart.org/image/800px/281195'); /* Sprite sheet de course de profil */
-        background-size: cover;
-        background-repeat: no-repeat;
-        display: block;
-        /* steps(X) force le navigateur à sauter d'une image à l'autre sans transition fluide bizarre */
-        animation: run-cycle 0.8s steps(12) infinite; 
-    }
-    
     @keyframes traverse {
-        0% { left: -5%; opacity: 0; }
+        0% { left: 0%; opacity: 0; }
         3% { opacity: 1; }
         94% { opacity: 1; }
         100% { left: 100%; opacity: 0; }
-    }
-
-    @keyframes run-cycle {
-        from { background-position: 0px; }
-        to { background-position: -768px; } /* Défilement horizontal des 12 frames de course */
     }
     </style>
     """,
@@ -92,11 +71,72 @@ def run_analysis(pdf_path: str):
         
         runner_placeholder = st.empty()
 
-        # HTML épuré utilisant le conteneur animé par Sprite
-        runner_html = """
+        # Code SVG autonome ultra-optimisé : Vraie cinématique de course humaine intégrée
+        raw_svg = """<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+            <style>
+                /* Animation asynchrone des membres pour une foulée réaliste */
+                .leg-l { animation: run-leg 0.6s infinite ease-in-out; transform-origin: 25px 26px; }
+                .leg-r { animation: run-leg 0.6s infinite ease-in-out; animation-delay: -0.3s; transform-origin: 25px 26px; }
+                
+                .arm-l { animation: run-arm-back 0.6s infinite ease-in-out; transform-origin: 26px 15px; }
+                .arm-r { animation: run-arm-front 0.6s infinite ease-in-out; animation-delay: -0.3s; transform-origin: 26px 15px; }
+                
+                .body-group { animation: run-bounce 0.3s infinite alternate ease-in-out; }
+
+                /* Les jambes se plient au niveau des articulations grâce aux keyframes de rotation */
+                @keyframes run-leg {
+                    0% { transform: rotate(-35deg); }
+                    30% { transform: rotate(15deg); }
+                    60% { transform: rotate(40deg); }
+                    80% { transform: rotate(5deg); }
+                    100% { transform: rotate(-35deg); }
+                }
+                /* Balancement des bras coordonnés en équerre */
+                @keyframes run-arm-front {
+                    0% { transform: rotate(35deg); }
+                    50% { transform: rotate(-30deg); }
+                    100% { transform: rotate(35deg); }
+                }
+                @keyframes run-arm-back {
+                    0% { transform: rotate(-35deg); }
+                    50% { transform: rotate(30deg); }
+                    100% { transform: rotate(-35deg); }
+                }
+                /* Suspension de course (léger rebond vertical) */
+                @keyframes run-bounce {
+                    0% { transform: translateY(0px); }
+                    100% { transform: translateY(-4px); }
+                }
+            </style>
+            
+            <g class="body-group">
+                <g class="arm-l" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="26,15 18,22 13,18" stroke="#E53935" stroke-width="4.5" />
+                    <line x1="13" y1="18" x2="10" y2="15" stroke="#EAA481" stroke-width="4" />
+                </g>
+
+                <polyline class="leg-l" points="25,26 17,37 25,46" fill="none" stroke="#EAA481" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
+
+                <line x1="26" y1="13" x2="25" y2="26" fill="none" stroke="#E53935" stroke-width="6.5" stroke-linecap="round" />
+                <line x1="25" y1="25" x2="25" y2="30" fill="none" stroke="#212121" stroke-width="7" stroke-linecap="round" />
+                
+                <circle cx="30" cy="7.5" r="4.8" fill="#EAA481" stroke="none" />
+
+                <polyline class="leg-r" points="25,26 31,37 23,47" fill="none" stroke="#EAA481" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
+
+                <g class="arm-r" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="26,15 33,21 40,16" stroke="#E53935" stroke-width="4.5" />
+                    <line x1="40" y1="16" x2="43" y2="13" stroke="#EAA481" stroke-width="4" />
+                </g>
+            </g>
+        </svg>"""
+        
+        # Encodage sécurisé local
+        b64_svg = base64.b64encode(raw_svg.encode('utf-8')).decode('utf-8')
+        runner_html = f"""
         <div class="jogging-track">
             <div class="runner-container">
-                <div class="animated-runner"></div>
+                <img src="data:image/svg+xml;base64,{b64_svg}" width="60" height="60" />
             </div>
         </div>
         """
@@ -109,10 +149,10 @@ def run_analysis(pdf_path: str):
         
         input_state: AgentState = {"pdf_path": pdf_path}
         
-        # Traitement réel multi-agents
+        # Traitement
         result = graph.invoke(input_state)
         
-        # Nettoyage à la fin
+        # Effacement propre du joggeur à la fin de la compilation
         runner_placeholder.empty()
         
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)

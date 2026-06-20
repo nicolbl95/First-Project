@@ -7,3 +7,4 @@ chromadb
 pypdf
 langchain-groq
 python-dotenv
+protobuf

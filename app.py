@@ -28,32 +28,56 @@ with st.sidebar:
     st.write("2. Agent Analyste (ChromaDB + Query)")
     st.write("3. Agent Rédacteur (LangGraph + Groq)")
 
+def run_analysis(pdf_path: str):
+    with st.status("Traitement du document par les agents IA...", expanded=True) as status:
+        st.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
+        st.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
+        st.write("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
+
+        input_state: AgentState = {"pdf_path": pdf_path}
+        result = graph.invoke(input_state)
+        status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
+
+    return result
+
 uploaded_file = st.file_uploader("Choisir un PDF", type="pdf")
 
-if uploaded_file and st.button("Lancer l'analyse IA"):
+st.write("Ou bien sélectionnez un rapport PDF d'exemple pour lancer l'analyse immédiatement.")
+
+example_reports = {
+    "BioSensus 2025": r"C:\Users\nicol\Documents\First project\Rapport_Performance_BioSensus_2025.pdf",
+    "TechNova": r"C:\Users\nicol\Documents\First project\Rapport_Financier_TechNova.pdf",
+    "OmniDrive": r"C:\Users\nicol\Documents\First project\Rapport_Financier_Avance_OmniDrive.pdf",
+}
+
+cols = st.columns(len(example_reports))
+selected_example = None
+for col, (label, path) in zip(cols, example_reports.items()):
+    if col.button(label):
+        selected_example = path
+
+result = None
+
+if selected_example is not None:
+    if not os.path.exists(selected_example):
+        st.error(f"Fichier d'exemple introuvable : {selected_example}")
+    else:
+        result = run_analysis(selected_example)
+elif uploaded_file and st.button("Lancer l'analyse IA"):
     # Création du fichier temporaire
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
 
-    # Lancement de la boîte de statut et exécution des agents
-    with st.status("Traitement du document par les agents IA...", expanded=True) as status:
-        st.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
-        st.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
-        st.write("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
-        
-        input_state: AgentState = {"pdf_path": tmp_path}
-        result = graph.invoke(input_state)
-        
-        status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
+    result = run_analysis(tmp_path)
 
     # Nettoyage du fichier temporaire après l'analyse
     if os.path.exists(tmp_path):
         os.unlink(tmp_path)
 
-    # Affichage horizontal propre avec st.markdown
+if result is not None:
     st.subheader("Analyse des risques")
     st.markdown(result.get("analysis", "Aucune analyse générée."))
-    
+
     st.subheader("Synthèse pour dirigeants")
     st.markdown(result.get("summary", "Aucune synthèse générée."))

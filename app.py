@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import threading
 
 # 1. Configurer la variable d'environnement Protobuf
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -22,13 +24,14 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection CSS pour le cercle de chargement personnalisé
+# Injection CSS pour le cercle de chargement personnalisé et l'alignement
 st.markdown(
     """
     <style>
     .loading-container {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 15px;
         font-size: 16px;
@@ -43,8 +46,22 @@ st.markdown(
         animation: spin 0.8s linear infinite;
         display: inline-block;
     }
+    .delay-text-1 {
+        color: #FFD700;
+        font-weight: normal;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    .delay-text-2 {
+        color: #FF5252;
+        font-weight: normal;
+        animation: fadeIn 0.5s ease-in-out;
+    }
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     </style>
     """,
@@ -61,7 +78,6 @@ with st.sidebar:
     st.write("3. Agent Rédacteur (LangGraph + Groq)")
 
 def run_analysis(pdf_path: str):
-    # st.status génère un cercle de chargement global autour du bloc
     with st.status("Traitement du document par les agents IA...", expanded=True) as status:
         
         # Initialisation des placeholders dynamiques
@@ -69,44 +85,76 @@ def run_analysis(pdf_path: str):
         step1_placeholder = st.empty()
         step2_placeholder = st.empty()
         step3_placeholder = st.empty()
-
-        # Affichage pendant l'analyse (Cercle en mouvement)
-        timer_placeholder.markdown(
-            '<div class="loading-container">⏳ Temps de chargement estimé : 12 secondes <span class="custom-spinner"></span></div>', 
-            unsafe_allow_html=True
-        )
         
         step1_placeholder.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
         step2_placeholder.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
         step3_placeholder.write("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
 
-        # Appel réel de l'architecture multi-agents
+        # Préparation du conteneur pour le résultat du thread
+        thread_result = {}
         input_state: AgentState = {"pdf_path": pdf_path}
-        result = graph.invoke(input_state)
+
+        # Fonction exécutée en tâche de fond
+        def worker():
+            try:
+                thread_result["output"] = graph.invoke(input_state)
+            except Exception as e:
+                thread_result["error"] = e
+
+        # Lancement du thread pour ne pas bloquer le chronomètre
+        analysis_thread = threading.Thread(target=worker)
+        start_time = time.time()
+        analysis_thread.start()
+
+        # Boucle de surveillance et mise à jour dynamique du chronomètre (Tant que l'IA travaille)
+        while analysis_thread.is_alive():
+            elapsed_time = time.time() - start_time
+            
+            # Construction du message selon le temps écoulé
+            message_html = f'<div class="loading-container">⏳ Temps de chargement estimé : 12 secondes ({int(elapsed_time)}s) <span class="custom-spinner"></span>'
+            
+            if elapsed_time >= 20:
+                message_html += ' <span class="delay-text-1">Désolé, cela prend plus de temps que prévu...</span> <span class="delay-text-2">Dernières finalisations…</span>'
+            elif elapsed_time >= 12:
+                message_html += ' <span class="delay-text-1">Désolé, cela prend plus de temps que prévu...</span>'
+                
+            message_html += '</div>'
+            
+            timer_placeholder.markdown(message_html, unsafe_allow_html=True)
+            time.sleep(0.2)  # Fréquence de rafraîchissement fluide
+
+        # Attente finale de sécurité pour clore le thread
+        analysis_thread.join()
+        total_duration = time.time() - start_time
+
+        # Gestion des erreurs éventuelles survenues dans le thread
+        if "error" in thread_result:
+            st.error(f"Une erreur est survenue lors de l'analyse : {thread_result['error']}")
+            return None
+
+        result = thread_result.get("output")
         
-        # Remplacement après analyse (Cercle remplacé par une coche de validation)
+        # Remplacement une fois terminé
         timer_placeholder.markdown(
-            '<div class="loading-container">✅ Temps de chargement estimé : 12 secondes (Terminé)</div>', 
+            f'<div class="loading-container">✅ Analyse exécutée en {int(total_duration)} secondes (Terminé)</div>', 
             unsafe_allow_html=True
         )
         
-        # Le statut passe en "complete" : le cercle Streamlit par défaut s'arrête également
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
 
     return result
 
 # Configuration des couleurs et du thème Premium Fintech
 THEME_COLORS = {
-    "primary": "#00E5FF",      # Bleu électrique néon
-    "secondary": "#7C4DFF",    # Violet profond moderne
-    "success": "#00E676",      # Vert émeraude éclatant
-    "warning": "#FFD700",      # Or / Ambre
-    "danger": "#FF5252",       # Corail / Rouge doux
-    "grid_color": "rgba(255, 255, 255, 0.05)" # Lignes de repère très subtiles
+    "primary": "#00E5FF",      
+    "secondary": "#7C4DFF",    
+    "success": "#00E676",      
+    "warning": "#FFD700",      
+    "danger": "#FF5252",       
+    "grid_color": "rgba(255, 255, 255, 0.05)" 
 }
 
 def apply_premium_layout(fig, title_text):
-    """Applique une charte graphique épurée et haut de gamme à un graphique Plotly."""
     fig.update_layout(
         title=dict(
             text=title_text,
@@ -141,7 +189,6 @@ def display_requested_chart(chart_type, report_label, key):
     if report_label not in ["BioSensus 2025", "TechNova", "OmniDrive"]:
         report_label = "OmniDrive"
 
-    # STYLE 1 : Histogramme / Barres
     if chart_type == "STYLE_BARRES":
         fig = go.Figure()
         if report_label == "OmniDrive":
@@ -174,7 +221,6 @@ def display_requested_chart(chart_type, report_label, key):
         apply_premium_layout(fig, title)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
 
-    # STYLE 2 : Donut / Courbe Lissée
     elif chart_type == "STYLE_DONUT_OU_LIGNE":
         if report_label == "TechNova":
             fig = go.Figure()
@@ -192,7 +238,7 @@ def display_requested_chart(chart_type, report_label, key):
                 values = [28.90, 33.55]
                 colors = [THEME_COLORS["primary"], THEME_COLORS["secondary"]]
                 title = "🎯 Ventilation Matrix (SaaS vs Matériel)"
-            else:  # BioSensus 2025
+            else: 
                 labels = ['Capitaux Propres', 'Dette Globale']
                 values = [31.2, 22.5]
                 colors = [THEME_COLORS["success"], THEME_COLORS["danger"]]
@@ -285,11 +331,14 @@ for col, (label, path) in zip(cols, example_reports.items()):
 
 result = None
 
+# Déclenchement automatique depuis l'un des boutons d'exemples
 if selected_example_label is not None and selected_example is not None:
     if not os.path.exists(selected_example):
         st.error(f"Fichier d'exemple introuvable pour '{selected_example_label}'.")
     else:
         result = run_analysis(selected_example)
+
+# Déclenchement depuis l'upload manuel
 elif uploaded_file and st.button("Lancer l'analyse IA"):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(uploaded_file.read())

@@ -23,31 +23,66 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du style CSS uniquement pour le jogging de gauche à droite
+# Injection du style CSS pour la piste de course et l'animation du personnage en SVG
 st.markdown(
     """
     <style>
-    /* Piste et animation du joggeur */
+    /* Piste et déplacement global de gauche à droite */
     .jogging-track {
         width: 100%;
         position: relative;
-        height: 40px;
+        height: 60px;
         margin-top: 15px;
         overflow: hidden;
         background: transparent;
     }
-    .runner {
-        font-size: 24px;
+    .runner-container {
         position: absolute;
-        bottom: 0;
+        bottom: 5px;
         left: 0;
-        animation: run 4s linear infinite;
+        animation: traverse 5s linear infinite;
     }
-    @keyframes run {
+    @keyframes traverse {
         0% { left: 0%; opacity: 0; }
         5% { opacity: 1; }
         90% { opacity: 1; }
         100% { left: 100%; opacity: 0; }
+    }
+
+    /* Animation interne du personnage SVG (Jambes et Bras) */
+    .left-leg {
+        animation: run-leg 0.6s ease-in-out infinite alternate;
+        transform-origin: 25px 25px;
+    }
+    .right-leg {
+        animation: run-leg 0.6s ease-in-out infinite alternate;
+        animation-delay: -0.3s;
+        transform-origin: 25px 25px;
+    }
+    .left-arm {
+        animation: run-arm 0.6s ease-in-out infinite alternate;
+        transform-origin: 25px 15px;
+    }
+    .right-arm {
+        animation: run-arm 0.6s ease-in-out infinite alternate;
+        animation-delay: -0.3s;
+        transform-origin: 25px 15px;
+    }
+    .body-group {
+        animation: bob 0.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes run-leg {
+        0% { transform: rotate(-35deg); }
+        100% { transform: rotate(35deg); }
+    }
+    @keyframes run-arm {
+        0% { transform: rotate(25deg); }
+        100% { transform: rotate(-40deg); }
+    }
+    @keyframes bob {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-2px); }
     }
     </style>
     """,
@@ -69,11 +104,26 @@ def run_analysis(pdf_path: str):
         step2_placeholder = st.empty()
         step3_placeholder = st.empty()
         
-        # Zone dynamique dédiée à l'homme qui court
         runner_placeholder = st.empty()
 
-        # Affichage du joggeur au début de la zone verte
-        runner_placeholder.markdown('<div class="jogging-track"><div class="runner">🏃‍♂️</div></div>', unsafe_allow_html=True)
+        # HTML du personnage articulé en cours de course vers la droite (Couleur : Bleu électrique néon)
+        runner_svg = """
+        <div class="jogging-track">
+            <div class="runner-container">
+                <svg width="40" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <g class="body-group" stroke="#00E5FF" stroke-width="3.5" stroke-linecap="round" fill="none">
+                        <circle cx="28" cy="8" r="4" fill="#00E5FF" stroke="none"/>
+                        <line class="left-arm" x1="25" y1="15" x2="16" y2="22" />
+                        <line x1="25" y1="12" x2="25" y2="25" />
+                        <line class="right-arm" x1="25" y1="15" x2="34" y2="20" />
+                        <polyline class="left-leg" points="25,25 18,35 24,45" />
+                        <polyline class="right-leg" points="25,25 32,35 28,45" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+        """
+        runner_placeholder.markdown(runner_svg, unsafe_allow_html=True)
 
         # --- ÉTAPE 1 ---
         step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF...", unsafe_allow_html=True)
@@ -82,10 +132,10 @@ def run_analysis(pdf_path: str):
         
         input_state: AgentState = {"pdf_path": pdf_path}
         
-        # Exécution réelle globale par LangGraph
+        # Traitement LangGraph
         result = graph.invoke(input_state)
         
-        # L'analyse est finie : on nettoie la zone pour faire disparaître le joggeur
+        # Disparition de l'animation à la fin du traitement
         runner_placeholder.empty()
         
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)

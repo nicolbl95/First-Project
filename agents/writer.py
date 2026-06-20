@@ -1,5 +1,5 @@
 import os
-from langchain_groq import ChatGroq
+from langchain_ollama import OllamaLLM
 
 def write_summary(state):
     if isinstance(state, dict):
@@ -16,14 +16,10 @@ def write_summary(state):
     Rédige une synthèse en 3 paragraphes pour un dirigeant non-expert.
     Utilise un langage simple et des exemples concrets."""
 
-    # Remplacement par le modèle actif : llama-3.1-8b-instant
-    llm = ChatGroq(
-        temperature=0.3,
-        model_name="llama-3.1-8b-instant",
-        groq_api_key=os.environ.get("GROQ_API_KEY")
-    )
-    
+    # Utilisation d'Ollama comme fallback pour l'exécution locale
+    llm = OllamaLLM(model="llama3")
+
     response = llm.invoke(prompt)
-    summary = response.content
+    summary = response if isinstance(response, str) else getattr(response, "content", str(response))
     
     return {"summary": summary}

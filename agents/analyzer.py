@@ -1,6 +1,6 @@
 import os
 import chromadb
-from langchain_groq import ChatGroq
+from langchain_ollama import OllamaLLM
 
 def analyze_risks(state):
     # 1. Récupérer l'état
@@ -25,12 +25,8 @@ def analyze_risks(state):
     # NETTOYAGE : On fusionne les lignes et on supprime les sauts de ligne anarchiques
     contexte_propre = " ".join([doc.replace("\n", " ").strip() for doc in documents_trouves])
 
-    # 4. On demande à Groq de rédiger une VRAIE analyse propre pour éliminer le style haché
-    llm = ChatGroq(
-        temperature=0.2,
-        model_name="llama-3.1-8b-instant",
-        groq_api_key=os.environ.get("GROQ_API_KEY")
-    )
+    # 4. Appel LLM (Ollama) pour rédiger une analyse propre
+    llm = OllamaLLM(model="llama3")
     
     prompt = f"""Tu es un analyste financier senior. Sur la base uniquement du contexte extrait ci-dessous, 
     rédige un rapport d'analyse structuré listant précisément les risques identifiés. 
@@ -41,8 +37,8 @@ def analyze_risks(state):
     
     try:
         response = llm.invoke(prompt)
-        analyse_generee = response.content
-    except Exception as e:
+        analyse_generee = response if isinstance(response, str) else getattr(response, "content", str(response))
+    except Exception:
         # En cas de problème d'API, repli sur un texte nettoyé manuellement
         analyse_generee = f"### Analyse des Risques (Mode brut nettoyé)\n\n{contexte_propre}"
 

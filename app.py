@@ -23,27 +23,31 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du style CSS pour animer les 3 petits points de chargement
+# Injection du style CSS uniquement pour le jogging de gauche à droite
 st.markdown(
     """
     <style>
-    .loading-dots span {
-        animation-name: blink;
-        animation-duration: 1.4s;
-        animation-iteration-count: infinite;
-        animation-fill-mode: both;
-        font-weight: bold;
+    /* Piste et animation du joggeur */
+    .jogging-track {
+        width: 100%;
+        position: relative;
+        height: 40px;
+        margin-top: 15px;
+        overflow: hidden;
+        background: transparent;
     }
-    .loading-dots span:nth-child(2) {
-        animation-delay: .2s;
+    .runner {
+        font-size: 24px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        animation: run 4s linear infinite;
     }
-    .loading-dots span:nth-child(3) {
-        animation-delay: .4s;
-    }
-    @keyframes blink {
-        0% { opacity: .2; }
-        20% { opacity: 1; }
-        100% { opacity: .2; }
+    @keyframes run {
+        0% { left: 0%; opacity: 0; }
+        5% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { left: 100%; opacity: 0; }
     }
     </style>
     """,
@@ -61,38 +65,29 @@ with st.sidebar:
 
 def run_analysis(pdf_path: str):
     with st.status("Traitement du document par les agents IA...", expanded=True) as status:
-        # Création des zones de texte dynamiques
         step1_placeholder = st.empty()
         step2_placeholder = st.empty()
         step3_placeholder = st.empty()
+        
+        # Zone dynamique dédiée à l'homme qui court
+        runner_placeholder = st.empty()
+
+        # Affichage du joggeur au début de la zone verte
+        runner_placeholder.markdown('<div class="jogging-track"><div class="runner">🏃‍♂️</div></div>', unsafe_allow_html=True)
 
         # --- ÉTAPE 1 ---
-        step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
-        step2_placeholder.text("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
-        step3_placeholder.text("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
-        
-        # Simulation/Execution Étape 1
-        input_state: AgentState = {"pdf_path": pdf_path}
-        # Note : Si votre graph.invoke prend tout le temps global, on peut diviser visuellement ou laisser tourner.
-        # Pour refléter la progression réelle ou simulée par étape, on fige l'étape 1 quand elle est prête :
-        time.sleep(1.5) 
         step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF...", unsafe_allow_html=True)
-
-        # --- ÉTAPE 2 ---
-        step2_placeholder.markdown("🧠 **Étape 2 :** L'Agent Analyste évalue les risques financiers<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
-        time.sleep(1.5)
         step2_placeholder.markdown("🧠 **Étape 2 :** L'Agent Analyste évalue les risques financiers...", unsafe_allow_html=True)
-
-        # --- ÉTAPE 3 ---
-        step3_placeholder.markdown("✍️ **Étape 3 :** L'Agent Rédacteur finalise la synthèse<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
-        
-        # Appel final du traitement complet (ou de la dernière étape du graphe)
-        result = graph.invoke(input_state)
-        
-        # Finalisation de l'affichage de l'étape 3
         step3_placeholder.markdown("✍️ **Étape 3 :** L'Agent Rédacteur finalise la synthèse...", unsafe_allow_html=True)
         
-        # Changement du statut principal
+        input_state: AgentState = {"pdf_path": pdf_path}
+        
+        # Exécution réelle globale par LangGraph
+        result = graph.invoke(input_state)
+        
+        # L'analyse est finie : on nettoie la zone pour faire disparaître le joggeur
+        runner_placeholder.empty()
+        
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
 
     return result

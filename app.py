@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import base64
 
 # 1. Configurer la variable d'environnement Protobuf
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -24,76 +23,27 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du style CSS pour créer le businessman pressé qui court vers la droite
+# Injection du style CSS pour animer les 3 petits points de chargement
 st.markdown(
     """
     <style>
-    .jogging-track {
-        width: 100%;
-        position: relative;
-        height: 65px;
-        margin-top: 15px;
-        overflow: hidden;
-        background: transparent;
-        border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
+    .loading-dots span {
+        animation-name: blink;
+        animation-duration: 1.4s;
+        animation-iteration-count: infinite;
+        animation-fill-mode: both;
+        font-weight: bold;
     }
-    
-    /* Déplacement global de gauche à droite sur l'écran */
-    .runner-container {
-        position: absolute;
-        bottom: 5px;
-        left: 0;
-        animation: traverse 5.5s linear infinite;
+    .loading-dots span:nth-child(2) {
+        animation-delay: .2s;
     }
-    
-    /* Composition du personnage : orienté vers la droite + inclinaison de course */
-    .businessman-runner {
-        display: flex;
-        align-items: center;
-        position: relative;
-        /* scaleX(-1) retourne les émojis pour qu'ils regardent TOUS vers la droite */
-        /* skewX(12deg) donne l'effet de vitesse / corps penché en avant */
-        transform: scaleX(-1) skewX(12deg); 
-        animation: running-bounce 0.35s ease-in-out infinite alternate;
+    .loading-dots span:nth-child(3) {
+        animation-delay: .4s;
     }
-    
-    /* Émoji principal (l'homme en costume/tuxedo) */
-    .suit-man {
-        font-size: 38px;
-        line-height: 1;
-        z-index: 2;
-    }
-    
-    /* Accessoire 1 : La valise / attaché-case derrière lui */
-    .briefcase {
-        font-size: 20px;
-        position: absolute;
-        left: -12px;
-        bottom: 2px;
-        z-index: 1;
-    }
-    
-    /* Accessoire 2 : Le gobelet de café à emporter devant lui */
-    .coffee-cup {
-        font-size: 18px;
-        position: absolute;
-        right: -10px;
-        top: 10px;
-        z-index: 3;
-    }
-    
-    /* Keyframes : Avancée linéaire */
-    @keyframes traverse {
-        0% { left: -10%; opacity: 0; }
-        3% { opacity: 1; }
-        94% { opacity: 1; }
-        100% { left: 100%; opacity: 0; }
-    }
-    
-    /* Keyframes : Rebondissement de course */
-    @keyframes running-bounce {
-        0% { transform: scaleX(-1) skewX(12deg) translateY(0px); }
-        100% { transform: scaleX(-1) skewX(12deg) translateY(-6px); }
+    @keyframes blink {
+        0% { opacity: .2; }
+        20% { opacity: 1; }
+        100% { opacity: .2; }
     }
     </style>
     """,
@@ -111,39 +61,38 @@ with st.sidebar:
 
 def run_analysis(pdf_path: str):
     with st.status("Traitement du document par les agents IA...", expanded=True) as status:
+        # Création des zones de texte dynamiques
         step1_placeholder = st.empty()
         step2_placeholder = st.empty()
         step3_placeholder = st.empty()
-        
-        runner_placeholder = st.empty()
-
-        # HTML assemblant le costume, la valise et le café
-        runner_html = """
-        <div class="jogging-track">
-            <div class="runner-container">
-                <div class="businessman-runner">
-                    <span class="briefcase">💼</span>
-                    <span class="suit-man">🤵</span>
-                    <span class="coffee-cup">☕</span>
-                </div>
-            </div>
-        </div>
-        """
-        runner_placeholder.markdown(runner_html, unsafe_allow_html=True)
 
         # --- ÉTAPE 1 ---
-        step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF...", unsafe_allow_html=True)
-        step2_placeholder.markdown("🧠 **Étape 2 :** L'Agent Analyste évalue les risques financiers...", unsafe_allow_html=True)
-        step3_placeholder.markdown("✍️ **Étape 3 :** L'Agent Rédacteur finalise la synthèse...", unsafe_allow_html=True)
+        step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
+        step2_placeholder.text("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
+        step3_placeholder.text("✍️ Étape 3 : L'Agent Rédacteur finalise la synthèse...")
         
+        # Simulation/Execution Étape 1
         input_state: AgentState = {"pdf_path": pdf_path}
+        # Note : Si votre graph.invoke prend tout le temps global, on peut diviser visuellement ou laisser tourner.
+        # Pour refléter la progression réelle ou simulée par étape, on fige l'étape 1 quand elle est prête :
+        time.sleep(1.5) 
+        step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF...", unsafe_allow_html=True)
+
+        # --- ÉTAPE 2 ---
+        step2_placeholder.markdown("🧠 **Étape 2 :** L'Agent Analyste évalue les risques financiers<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
+        time.sleep(1.5)
+        step2_placeholder.markdown("🧠 **Étape 2 :** L'Agent Analyste évalue les risques financiers...", unsafe_allow_html=True)
+
+        # --- ÉTAPE 3 ---
+        step3_placeholder.markdown("✍️ **Étape 3 :** L'Agent Rédacteur finalise la synthèse<span class='loading-dots'><span>.</span><span>.</span><span>.</span></span>", unsafe_allow_html=True)
         
-        # Traitement
+        # Appel final du traitement complet (ou de la dernière étape du graphe)
         result = graph.invoke(input_state)
         
-        # Nettoyage
-        runner_placeholder.empty()
+        # Finalisation de l'affichage de l'étape 3
+        step3_placeholder.markdown("✍️ **Étape 3 :** L'Agent Rédacteur finalise la synthèse...", unsafe_allow_html=True)
         
+        # Changement du statut principal
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
 
     return result

@@ -44,23 +44,52 @@ uploaded_file = st.file_uploader("Choisir un PDF", type="pdf")
 
 st.write("Ou bien sélectionnez un rapport PDF d'exemple pour lancer l'analyse immédiatement.")
 
+sample_dir = os.path.join(project_root, "sample_reports")
+
+sample_files = {
+    "BioSensus 2025": "Rapport_Performance_BioSensus_2025.pdf",
+    "TechNova": "Rapport_Financier_TechNova.pdf",
+    "OmniDrive": "Rapport_Financier_Avance_OmniDrive.pdf",
+}
+
+def resolve_sample_path(filename: str) -> str | None:
+    # Priorité au dossier sample_reports dans le projet
+    candidates = [
+        os.path.join(sample_dir, filename),
+        os.path.join(project_root, filename),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    # Recherche dans tout le projet pour gérer les déplacements internes
+    for root, _, files in os.walk(project_root):
+        if filename in files:
+            return os.path.join(root, filename)
+
+    return None
+
 example_reports = {
-    "BioSensus 2025": r"C:\Users\nicol\Documents\First project\Rapport_Performance_BioSensus_2025.pdf",
-    "TechNova": r"C:\Users\nicol\Documents\First project\Rapport_Financier_TechNova.pdf",
-    "OmniDrive": r"C:\Users\nicol\Documents\First project\Rapport_Financier_Avance_OmniDrive.pdf",
+    label: resolve_sample_path(filename)
+    for label, filename in sample_files.items()
 }
 
 cols = st.columns(len(example_reports))
 selected_example = None
+selected_example_label = None
 for col, (label, path) in zip(cols, example_reports.items()):
     if col.button(label):
         selected_example = path
+        selected_example_label = label
 
 result = None
 
-if selected_example is not None:
-    if not os.path.exists(selected_example):
-        st.error(f"Fichier d'exemple introuvable : {selected_example}")
+if selected_example_label is not None:
+    if selected_example is None or not os.path.exists(selected_example):
+        st.error(
+            f"Fichier d'exemple introuvable pour '{selected_example_label}'. "
+            "Vérifiez que les rapports PDF sont présents dans le projet."
+        )
     else:
         result = run_analysis(selected_example)
 elif uploaded_file and st.button("Lancer l'analyse IA"):

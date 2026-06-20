@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import base64
 
 # 1. Configurer la variable d'environnement Protobuf
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -23,11 +24,10 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du style CSS pour la piste et les articulations mécaniques du joggeur
+# Injection du style CSS pour le déplacement global de gauche à droite
 st.markdown(
     """
     <style>
-    /* Conteneur global de la piste */
     .jogging-track {
         width: 100%;
         position: relative;
@@ -36,62 +36,17 @@ st.markdown(
         overflow: hidden;
         background: transparent;
     }
-    
-    /* Déplacement fluide de gauche à droite */
     .runner-container {
         position: absolute;
         bottom: 5px;
         left: 0;
         animation: traverse 5.5s linear infinite;
     }
-    
     @keyframes traverse {
         0% { left: 0%; opacity: 0; }
         4% { opacity: 1; }
         92% { opacity: 1; }
         100% { left: 100%; opacity: 0; }
-    }
-
-    /* --- ANIMATIONS DES MEMBRES --- */
-    /* Balancement des jambes (inversées de 180° pour une vraie foulée) */
-    .leg-back {
-        animation: run-foule 0.5s ease-in-out infinite alternate;
-        transform-origin: 22px 24px;
-    }
-    .leg-front {
-        animation: run-foule 0.5s ease-in-out infinite alternate;
-        animation-delay: -0.25s;
-        transform-origin: 22px 24px;
-    }
-    
-    /* Balancement des bras (coordonnés à l'inverse des jambes) */
-    .arm-back {
-        animation: run-arm-foule 0.5s ease-in-out infinite alternate;
-        animation-delay: -0.25s;
-        transform-origin: 22px 14px;
-    }
-    .arm-front {
-        animation: run-arm-foule 0.5s ease-in-out infinite alternate;
-        transform-origin: 22px 14px;
-    }
-    
-    /* Légère oscillation verticale du corps pour le réalisme du pas */
-    .body-group {
-        animation: jog-bob 0.25s ease-in-out infinite alternate;
-        transform-origin: center;
-    }
-
-    @keyframes run-foule {
-        0% { transform: rotate(-30deg); }
-        100% { transform: rotate(35deg); }
-    }
-    @keyframes run-arm-foule {
-        0% { transform: rotate(40deg); }
-        100% { transform: rotate(-35deg); }
-    }
-    @keyframes jog-bob {
-        0% { transform: translateY(0px); }
-        100% { transform: translateY(-3px); }
     }
     </style>
     """,
@@ -115,39 +70,45 @@ def run_analysis(pdf_path: str):
         
         runner_placeholder = st.empty()
 
-        # HTML / SVG du joggeur avec des couleurs humaines (Beige, Rouge, Noir) orienté vers la droite
-        runner_svg = """
+        # Code SVG brut et articulé du joggeur (proportions humaines, t-shirt rouge, short noir)
+        raw_svg = """<svg width="45" height="55" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+            <style>
+                .leg-back { animation: run-foule 0.5s ease-in-out infinite alternate; transform-origin: 22px 24px; }
+                .leg-front { animation: run-foule 0.5s ease-in-out infinite alternate; animation-delay: -0.25s; transform-origin: 22px 24px; }
+                .arm-back { animation: run-arm-foule 0.5s ease-in-out infinite alternate; animation-delay: -0.25s; transform-origin: 22px 14px; }
+                .arm-front { animation: run-arm-foule 0.5s ease-in-out infinite alternate; transform-origin: 22px 14px; }
+                .body-group { animation: jog-bob 0.25s ease-in-out infinite alternate; transform-origin: center; }
+                @keyframes run-foule { 0% { transform: rotate(-30deg); } 100% { transform: rotate(35deg); } }
+                @keyframes run-arm-foule { 0% { transform: rotate(40deg); } 100% { transform: rotate(-35deg); } }
+                @keyframes jog-bob { 0% { transform: translateY(0px); } 100% { transform: translateY(-3px); } }
+            </style>
+            <g class="body-group" stroke-linecap="round" stroke-linejoin="round">
+                <polyline class="leg-back" points="22,24 16,34 23,44" fill="none" stroke="#EAA481" stroke-width="3.5" />
+                <g class="arm-back" fill="none">
+                    <line x1="22" y1="14" x2="15" y2="21" stroke="#E53935" stroke-width="4" />
+                    <line x1="15" y1="21" x2="10" y2="17" stroke="#EAA481" stroke-width="3.5" />
+                </g>
+                <line x1="22" y1="12" x2="22" y2="24" fill="none" stroke="#E53935" stroke-width="5.5" />
+                <circle cx="25" cy="7" r="4.5" fill="#EAA481" stroke="none" />
+                <line x1="22" y1="22" x2="22" y2="26" fill="none" stroke="#212121" stroke-width="6" />
+                <polyline class="leg-front" points="22,24 28,34 22,44" fill="none" stroke="#EAA481" stroke-width="3.5" />
+                <g class="arm-front" fill="none">
+                    <line x1="22" y1="14" x2="28" y2="21" stroke="#E53935" stroke-width="4" />
+                    <line x1="28" y1="21" x2="34" y2="18" stroke="#EAA481" stroke-width="3.5" />
+                </g>
+            </g>
+        </svg>"""
+        
+        # Encodage sécurisé en Base64 pour isoler le composant graphique et supprimer le bug de capture d'écran
+        b64_svg = base64.b64encode(raw_svg.encode('utf-8')).decode('utf-8')
+        runner_html = f"""
         <div class="jogging-track">
             <div class="runner-container">
-                <svg width="45" height="55" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <g class="body-group" stroke-linecap="round" stroke-linejoin="round">
-                        
-                        <polyline class="leg-back" points="22,24 16,34 23,44" fill="none" stroke="#EAA481" stroke-width="3.5" />
-                        
-                        <g class="arm-back" fill="none" stroke-linecap="round">
-                            <line x1="22" y1="14" x2="15" y2="21" stroke="#E53935" stroke-width="4" />
-                            <line x1="15" y1="21" x2="10" y2="17" stroke="#EAA481" stroke-width="3.5" />
-                        </g>
-
-                        <line x1="22" y1="12" x2="22" y2="24" fill="none" stroke="#E53935" stroke-width="5.5" />
-                        
-                        <circle cx="25" cy="7" r="4.5" fill="#EAA481" stroke="none" />
-                        
-                        <line x1="22" y1="22" x2="22" y2="26" fill="none" stroke="#212121" stroke-width="6" />
-
-                        <polyline class="leg-front" points="22,24 28,34 22,44" fill="none" stroke="#EAA481" stroke-width="3.5" />
-
-                        <g class="arm-front" fill="none" stroke-linecap="round">
-                            <line x1="22" y1="14" x2="28" y2="21" stroke="#E53935" stroke-width="4" />
-                            <line x1="28" y1="21" x2="34" y2="18" stroke="#EAA481" stroke-width="3.5" />
-                        </g>
-                        
-                    </g>
-                </svg>
+                <img src="data:image/svg+xml;base64,{b64_svg}" width="45" height="55" />
             </div>
         </div>
         """
-        runner_placeholder.markdown(runner_svg, unsafe_allow_html=True)
+        runner_placeholder.markdown(runner_html, unsafe_allow_html=True)
 
         # --- ÉTAPE 1 ---
         step1_placeholder.markdown("🕵️‍♂️ **Étape 1 :** L'Agent Extracteur récupère le texte du PDF...", unsafe_allow_html=True)
@@ -156,10 +117,10 @@ def run_analysis(pdf_path: str):
         
         input_state: AgentState = {"pdf_path": pdf_path}
         
-        # Traitement LangGraph
+        # Traitement du graphe multi-agents
         result = graph.invoke(input_state)
         
-        # Disparition immédiate de l'animation à la fin de l'analyse
+        # Nettoyage de l'animation à la fin
         runner_placeholder.empty()
         
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)

@@ -21,6 +21,7 @@ from graph_builder import AgentState, build_graph
 graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
+
 st.title("Assistant IA — Analyse Financière Multi-Agents")
 st.write("Déposez un rapport financier PDF. 3 agents IA l'analysent en séquence.")
 
@@ -31,6 +32,7 @@ with st.sidebar:
     st.write("3. Agent Rédacteur (LangGraph + Groq)")
 
 def run_analysis(pdf_path: str):
+    # st.status génère un cercle de chargement qui tourne pendant l'analyse
     with st.status("Traitement du document par les agents IA...", expanded=True) as status:
         st.write("🕵️‍♂️ Étape 1 : L'Agent Extracteur récupère le texte du PDF...")
         st.write("🧠 Étape 2 : L'Agent Analyste évalue les risques financiers...")
@@ -38,6 +40,8 @@ def run_analysis(pdf_path: str):
 
         input_state: AgentState = {"pdf_path": pdf_path}
         result = graph.invoke(input_state)
+        
+        # Le statut passe en "complete" : le cercle s'arrête et devient une icône de validation
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)
 
     return result
@@ -83,7 +87,7 @@ def apply_premium_layout(fig, title_text):
     fig.update_xaxes(showgrid=False, linecolor="rgba(255,255,255,0.1)", zeroline=False)
     fig.update_yaxes(showgrid=True, gridcolor=THEME_COLORS["grid_color"], zeroline=False, linecolor="rgba(255,255,255,0.1)")
 
-# Génération des graphiques - Titres nettoyés sans mention de style
+# Génération des graphiques
 def display_requested_chart(chart_type, report_label, key):
     if report_label not in ["BioSensus 2025", "TechNova", "OmniDrive"]:
         report_label = "OmniDrive"

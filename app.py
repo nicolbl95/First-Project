@@ -24,41 +24,76 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du style CSS pour la piste de course et la cinématique humaine
+# Injection du style CSS pour créer le businessman pressé qui court vers la droite
 st.markdown(
     """
     <style>
     .jogging-track {
         width: 100%;
         position: relative;
-        height: 60px;
+        height: 65px;
         margin-top: 15px;
         overflow: hidden;
         background: transparent;
         border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
     }
+    
+    /* Déplacement global de gauche à droite sur l'écran */
     .runner-container {
         position: absolute;
         bottom: 5px;
         left: 0;
-        font-size: 38px; /* Taille parfaite pour le coureur */
-        line-height: 1;
-        /* Animation combinée : avance linéaire + dynamique de foulée (bounce/inclinaison) */
-        animation: traverse 5.5s linear infinite, running-stride 0.35s ease-in-out infinite alternate;
+        animation: traverse 5.5s linear infinite;
     }
     
-    /* Déplacement de gauche à droite sur l'écran */
+    /* Composition du personnage : orienté vers la droite + inclinaison de course */
+    .businessman-runner {
+        display: flex;
+        align-items: center;
+        position: relative;
+        /* scaleX(-1) retourne les émojis pour qu'ils regardent TOUS vers la droite */
+        /* skewX(12deg) donne l'effet de vitesse / corps penché en avant */
+        transform: scaleX(-1) skewX(12deg); 
+        animation: running-bounce 0.35s ease-in-out infinite alternate;
+    }
+    
+    /* Émoji principal (l'homme en costume/tuxedo) */
+    .suit-man {
+        font-size: 38px;
+        line-height: 1;
+        z-index: 2;
+    }
+    
+    /* Accessoire 1 : La valise / attaché-case derrière lui */
+    .briefcase {
+        font-size: 20px;
+        position: absolute;
+        left: -12px;
+        bottom: 2px;
+        z-index: 1;
+    }
+    
+    /* Accessoire 2 : Le gobelet de café à emporter devant lui */
+    .coffee-cup {
+        font-size: 18px;
+        position: absolute;
+        right: -10px;
+        top: 10px;
+        z-index: 3;
+    }
+    
+    /* Keyframes : Avancée linéaire */
     @keyframes traverse {
-        0% { left: -5%; opacity: 0; }
+        0% { left: -10%; opacity: 0; }
         3% { opacity: 1; }
         94% { opacity: 1; }
         100% { left: 100%; opacity: 0; }
     }
     
-    /* Vrai dynamisme de course : oscillation verticale + inclinaison naturelle vers l'avant */
-    @keyframes running-stride {
-        0% { transform: translateY(0px) skewX(-10deg); }
-        100% { transform: translateY(-6px) skewX(-12deg); }
+    /* Keyframes : Rebondissement de course */
+    @keyframes running-bounce {
+        0% { transform: scaleX(-1) skewX(12deg) translateY(0px); }
+        100% { transform: scaleX(-1) skewX(12deg) translateY(-6px); }
     }
     </style>
     """,
@@ -82,10 +117,16 @@ def run_analysis(pdf_path: str):
         
         runner_placeholder = st.empty()
 
-        # HTML ultra-léger et robuste utilisant le coureur système natif
+        # HTML assemblant le costume, la valise et le café
         runner_html = """
         <div class="jogging-track">
-            <div class="runner-container">🏃</div>
+            <div class="runner-container">
+                <div class="businessman-runner">
+                    <span class="briefcase">💼</span>
+                    <span class="suit-man">🤵</span>
+                    <span class="coffee-cup">☕</span>
+                </div>
+            </div>
         </div>
         """
         runner_placeholder.markdown(runner_html, unsafe_allow_html=True)
@@ -100,7 +141,7 @@ def run_analysis(pdf_path: str):
         # Traitement
         result = graph.invoke(input_state)
         
-        # Suppression propre du coureur à la fin
+        # Nettoyage
         runner_placeholder.empty()
         
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)

@@ -47,12 +47,12 @@ st.markdown(
         display: inline-block;
     }
     .delay-text-1 {
-        color: #FFD700;
+        color: #81D4FA;
         font-weight: normal;
         animation: fadeIn 0.5s ease-in-out;
     }
     .delay-text-2 {
-        color: #FF5252;
+        color: #A5D6A7;
         font-weight: normal;
         animation: fadeIn 0.5s ease-in-out;
     }

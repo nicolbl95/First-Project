@@ -52,7 +52,7 @@ langchain-community==0.4.2
 langchain-core==1.4.8
 langchain-ollama==1.1.0
 langchain-protocol==0.0.18
-langchain-text-splitters==1.1.2
+langchain-text-splitter==1.1.2
 langgraph==1.2.6
 langgraph-checkpoint==4.1.1
 langgraph-prebuilt==1.1.0

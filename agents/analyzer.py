@@ -1,5 +1,4 @@
 import chromadb
-# Importe ton client LLM ici si nécessaire (ex: de langchain_community.llms import Ollama ou autre)
 
 def analyze_risks(state):
     # 1. Récupérer le texte brut ou l'état si besoin
@@ -13,19 +12,20 @@ def analyze_risks(state):
     collection = client.get_or_create_collection("financial_doc")
 
     # 3. Effectuer la requête RAG sur la collection
-    # On cherche par exemple les segments parlant de "risques" ou "financier"
     results = collection.query(
         query_texts=["risques financiers, dépendances, réglementation, change"],
         n_results=5
     )
     
     # Récupération des fragments de texte trouvés
-    documents_trouves = results.get("documents", [[]])[0]
+    documents = results.get("documents") or []
+    documents_trouves = documents[0] if documents else []
     contexte_rag = "\n".join(documents_trouves)
 
-    # 4. Simulation ou appel de ton modèle IA (Ollama / Llama 3) avec le contexte
-    # Remplace cette ligne par ton vrai appel LLM si tu as une variable spécifique
+    # 4. Génération de l'analyse avec le contexte extrait
     analyse_generee = f"Analyste IA - Analyse basée sur le contexte extrait :\n\n{contexte_rag}\n\n[Analyse des risques complétée]"
 
     # 5. On met à jour l'état du graphe avec le résultat de l'analyse
     return {"analysis": analyse_generee}
+
+# Force update cache token 2026

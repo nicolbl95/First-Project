@@ -24,29 +24,51 @@ graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
-# Injection du CSS gérant la translation fluide de gauche à droite sur la piste
+# Injection du CSS gérant la piste de course et le défilement du Sprite
 st.markdown(
     """
     <style>
+    /* Piste de course */
     .jogging-track {
         width: 100%;
         position: relative;
-        height: 75px;
+        height: 80px;
         margin-top: 15px;
         overflow: hidden;
         background: transparent;
+        border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
     }
+    
+    /* Déplacement global de gauche à droite */
     .runner-container {
         position: absolute;
-        bottom: 5px;
+        bottom: 0px;
         left: 0;
-        animation: traverse 5.5s linear infinite;
+        animation: traverse 6s linear infinite;
     }
+    
+    /* VRAIE ANIMATION DE COURSE (Décomposition image par image via Sprite) */
+    .animated-runner {
+        width: 64px;
+        height: 64px;
+        background-image: url('https://openclipart.org/image/800px/281195'); /* Sprite sheet de course de profil */
+        background-size: cover;
+        background-repeat: no-repeat;
+        display: block;
+        /* steps(X) force le navigateur à sauter d'une image à l'autre sans transition fluide bizarre */
+        animation: run-cycle 0.8s steps(12) infinite; 
+    }
+    
     @keyframes traverse {
-        0% { left: 0%; opacity: 0; }
+        0% { left: -5%; opacity: 0; }
         3% { opacity: 1; }
         94% { opacity: 1; }
         100% { left: 100%; opacity: 0; }
+    }
+
+    @keyframes run-cycle {
+        from { background-position: 0px; }
+        to { background-position: -768px; } /* Défilement horizontal des 12 frames de course */
     }
     </style>
     """,
@@ -70,85 +92,11 @@ def run_analysis(pdf_path: str):
         
         runner_placeholder = st.empty()
 
-        # Nouveau SVG cinématique : Les genoux et les coudes ont des animations de pliage cycliques indépendantes des hanches
-        raw_svg = """<svg width="65" height="65" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-            <style>
-                /* Cycle complet de course humaine - Synchronisation des articulations */
-                .arm-back-group { animation: cycle-arm-back 0.6s infinite linear; transform-origin: 25px 16px; }
-                .arm-front-group { animation: cycle-arm-front 0.6s infinite linear; transform-origin: 25px 16px; }
-                
-                .leg-back-thigh { animation: cycle-thigh-back 0.6s infinite linear; transform-origin: 23px 28px; }
-                .leg-front-thigh { animation: cycle-thigh-front 0.6s infinite linear; transform-origin: 23px 28px; }
-                
-                .body-core { animation: cycle-bounce 0.3s infinite alternate ease-in-out; transform-origin: center; }
-
-                /* Animations des cuisses (Hanches) */
-                @keyframes cycle-thigh-front {
-                    0% { transform: rotate(-35deg); }
-                    25% { transform: rotate(10deg); }
-                    50% { transform: rotate(35deg); }
-                    75% { transform: rotate(0deg); }
-                    100% { transform: rotate(-35deg); }
-                }
-                @keyframes cycle-thigh-back {
-                    0% { transform: rotate(35deg); }
-                    25% { transform: rotate(0deg); }
-                    50% { transform: rotate(-35deg); }
-                    75% { transform: rotate(10deg); }
-                    100% { transform: rotate(35deg); }
-                }
-
-                /* Animations des bras pliés à 90° (Coudes/Épaules) */
-                @keyframes cycle-arm-front {
-                    0% { transform: rotate(25deg); }
-                    50% { transform: rotate(-35deg); }
-                    100% { transform: rotate(25deg); }
-                }
-                @keyframes cycle-arm-back {
-                    0% { transform: rotate(-35deg); }
-                    50% { transform: rotate(25deg); }
-                    100% { transform: rotate(-35deg); }
-                }
-
-                /* Dynamique d'impact au sol (Le corps s'élève à l'impulsion) */
-                @keyframes cycle-bounce {
-                    0% { transform: translateY(0px) rotate(0deg); }
-                    100% { transform: translateY(-4px) rotate(1deg); }
-                }
-            </style>
-            
-            <g class="body-core">
-                <g class="leg-back-thigh" fill="none" stroke="#EAA481" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23,28 17,39 26,45" />
-                </g>
-
-                <g class="arm-back-group" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                    <polyline points="25,16 18,23 13,18" stroke="#E53935" stroke-width="4.5" />
-                    <line x1="13" y1="18" x2="10" y2="15" stroke="#EAA481" stroke-width="4" />
-                </g>
-
-                <line x1="25" y1="14" x2="23" y2="28" fill="none" stroke="#E53935" stroke-width="7" stroke-linecap="round" />
-                <line x1="23" y1="26" x2="23" y2="31" fill="none" stroke="#212121" stroke-width="7.5" stroke-linecap="round" />
-                
-                <circle cx="29" cy="8" r="5" fill="#EAA481" stroke="none" />
-
-                <g class="leg-front-thigh" fill="none" stroke="#EAA481" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23,28 31,38 24,46" />
-                </g>
-
-                <g class="arm-front-group" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                    <polyline points="25,16 33,22 40,17" stroke="#E53935" stroke-width="4.5" />
-                    <line x1="40" y1="17" x2="43" y2="14" stroke="#EAA481" stroke-width="4" />
-                </g>
-            </g>
-        </svg>"""
-        
-        # Isolation complète de la structure SVG en Base64
-        b64_svg = base64.b64encode(raw_svg.encode('utf-8')).decode('utf-8')
-        runner_html = f"""
+        # HTML épuré utilisant le conteneur animé par Sprite
+        runner_html = """
         <div class="jogging-track">
             <div class="runner-container">
-                <img src="data:image/svg+xml;base64,{b64_svg}" width="65" height="65" />
+                <div class="animated-runner"></div>
             </div>
         </div>
         """
@@ -161,10 +109,10 @@ def run_analysis(pdf_path: str):
         
         input_state: AgentState = {"pdf_path": pdf_path}
         
-        # Traitement du graphe multi-agents
+        # Traitement réel multi-agents
         result = graph.invoke(input_state)
         
-        # Suppression de la piste à la fin du chargement
+        # Nettoyage à la fin
         runner_placeholder.empty()
         
         status.update(label="Analyse terminée avec succès !", state="complete", expanded=False)

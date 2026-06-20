@@ -109,18 +109,18 @@ def run_analysis(pdf_path: str):
         # Boucle de surveillance et mise à jour dynamique du chronomètre (Tant que l'IA travaille)
         while analysis_thread.is_alive():
             elapsed_time = time.time() - start_time
-            
-            # Construction du message avec l'estimation fixée à 16 secondes
-            message_html = f'<div class="loading-container">⏳ Temps de chargement estimé : 16 secondes ({int(elapsed_time)}s) <span class="custom-spinner"></span>'
-            
-            # Gestion des seuils de messages d'attente progressifs
-            if elapsed_time >= 43:
+
+            # Construction du message avec l'estimation choisie (22 secondes)
+            message_html = f'<div class="loading-container">⏳ Temps de chargement estimé : 22 secondes ({int(elapsed_time)}s) <span class="custom-spinner"></span>'
+
+            # Seuils progressifs pour afficher des messages d'attente
+            if elapsed_time >= 40:
                 message_html += ' <span class="delay-text-1">Désolé, cela prend plus de temps que prévu...</span> <span class="delay-text-2">Dernières finalisations…</span>'
-            elif elapsed_time >= 30:
+            elif elapsed_time >= 22:
                 message_html += ' <span class="delay-text-1">Désolé, cela prend plus de temps que prévu...</span>'
-                
+
             message_html += '</div>'
-            
+
             timer_placeholder.markdown(message_html, unsafe_allow_html=True)
             time.sleep(0.2)  # Fréquence de rafraîchissement fluide
 

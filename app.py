@@ -102,7 +102,7 @@ TRADUCTIONS = {
     "ES": {
         "title": "Asistente IA — Análisis Financiero Multi-Agente",
         "subtitle": "Suba un informe financiero en PDF de menos de 20 páginas. 3 agentes de IA lo analizan en secuencia.",
-        "sidebar_title": "⚙️ Arquitectura del Sistema",
+        "sidebar_title": "Arquitectura del Sistema",
         "sidebar_subtitle": "Estructura secuencial orquestada por un gráfico de agentes inteligentes.",
         "agent1_title": "🕵️‍♂️ 1. Agente Extractor",
         "agent1_tech": "**Tecnologías:** `PyPDF` | `ChromaDB` | `RAG`",
@@ -121,7 +121,7 @@ TRADUCTIONS = {
         "step1": "🕵️‍♂️ Paso 1: El Agente Extractor escanea e indexa el documento...",
         "step2": "🧠 Paso 2: El Agente Analista evalúa los riesgos financieros...",
         "step3": "✍️ Paso 3: El Agente Redactor finaliza el resumen...",
-        "timer_estimated": "Tiempo estimado de carga: 22 segundos",
+        "timer_estimated": "Tiempo estimado de carga: 22 secondes",
         "delay1": "Disculpe, esto está tardando más de lo previsto...",
         "delay2": "Últimos retoques…",
         "done": "¡Análisis completado con éxito!",
@@ -138,10 +138,70 @@ TRADUCTIONS = {
 
 t = TRADUCTIONS[st.session_state["lang"]]
 
-# --- INJECTION CSS FORCEE POUR VERROUILLER L'ALIGNEMENT HORIZONTAL ET LES CERCLES ---
+# --- INJECTION DU CODE COMPOSANT : EN-TÊTE HORIZONTALE COMPLÈTEMENT VERROUILLÉE ---
+# On intercepte et écrase les styles Streamlit natifs qui forcent les retours à la ligne dans le bloc supérieur
 st.markdown(
     """
     <style>
+    /* Forcer l'en-tête globale à rester sur une ligne avec Flexbox */
+    .header-lock-row {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin-bottom: 20px !important;
+        padding-bottom: 10px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .header-lock-row h1 {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 2.1rem !important;
+        font-weight: 700 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Groupe de boutons horizontaux */
+    .lang-container-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+        align-items: center !important;
+    }
+
+    /* Liens stylisés sous forme de boutons cercles parfaits */
+    .lang-circle-btn {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
+        background-color: #1E222A !important;
+        color: #B0B3B8 !important;
+        border: 2px solid rgba(255, 255, 255, 0.15) !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    .lang-circle-btn:hover {
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* État actif : cercle vert éclatant */
+    .lang-circle-btn.active {
+        border: 2.5px solid #00E676 !important;
+        box-shadow: 0 0 12px rgba(0, 230, 118, 0.4) !important;
+        color: #FFFFFF !important;
+        background-color: #14171C !important;
+    }
+    
     .loading-container {
         display: flex;
         align-items: center;
@@ -160,71 +220,6 @@ st.markdown(
         animation: spin 0.8s linear infinite;
         display: inline-block;
     }
-    
-    /* Conteneur global de la ligne de titre : alignement horizontal STRICT et sans retour à la ligne */
-    .header-absolute-row {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100% !important;
-        white-space: nowrap !important;
-        margin-bottom: 15px !important;
-        gap: 20px !important;
-    }
-    
-    .header-absolute-row h1 {
-        margin: 0 !important;
-        padding: 0 !important;
-        font-size: 2.2rem !important;
-        white-space: nowrap !important;
-        display: inline-block !important;
-    }
-
-    /* Conteneur horizontal pour les boutons ronds */
-    .lang-flex-group {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-
-    /* Forcer le bouton Streamlit natif à devenir un cercle parfait, stable et immuable */
-    .lang-flex-group div[data-testid="stButton"] button {
-        border-radius: 50% !important;
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
-        min-height: 44px !important;
-        max-height: 44px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-color: #1E222A !important;
-        color: #B0B3B8 !important;
-        border: 2px solid rgba(255, 255, 255, 0.15) !important;
-    }
-
-    /* Supprime les marges de texte internes appliquées par Streamlit */
-    .lang-flex-group div[data-testid="stButton"] button p {
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 44px !important;
-    }
-
-    /* Bordure VERTE lumineuse pour la langue sélectionnée */
-    .lang-flex-group .active-lang div[data-testid="stButton"] button {
-        border: 2.5px solid #00E676 !important;
-        box-shadow: 0 0 10px rgba(0, 230, 118, 0.4) !important;
-        color: #FFFFFF !important;
-    }
-    
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
@@ -233,42 +228,35 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- CREATION DE LA LIGNE TITRE + BOUTONS SANS UTILISER ST.COLUMNS ---
-# On ouvre la div globale flexbox
-st.markdown('<div class="header-absolute-row">', unsafe_allow_html=True)
+# --- CAPTURE DU PARAMÈTRE DE TRADUCTION DE L'URL ---
+# On utilise les query_params natifs pour changer de langue proprement au clic sur les cercles HTML
+query_params = st.query_params
+if "set_lang" in query_params:
+    requested_lang = query_params["set_lang"]
+    if requested_lang in ["FR", "EN", "ES"] and requested_lang != st.session_state["lang"]:
+        st.session_state["lang"] = requested_lang
+        st.rerun()
 
-# 1. Le titre à gauche
-st.markdown(f"<h1>{t['title']}</h1>", unsafe_allow_html=True)
+# Rendu HTML pur de l'en-tête unifiée (Titre à gauche, Boutons en cercle à droite)
+active_fr = "active" if st.session_state["lang"] == "FR" else ""
+active_en = "active" if st.session_state["lang"] == "EN" else ""
+active_es = "active" if st.session_state["lang"] == "ES" else ""
 
-# 2. Le groupe de boutons à droite
-st.markdown('<div class="lang-flex-group">', unsafe_allow_html=True)
+st.markdown(
+    f"""
+    <div class="header-lock-row">
+        <h1>{t['title']}</h1>
+        <div class="lang-container-row">
+            <a href="?set_lang=FR" target="_self" class="lang-circle-btn {active_fr}">FR</a>
+            <a href="?set_lang=EN" target="_self" class="lang-circle-btn {active_en}">GB</a>
+            <a href="?set_lang=ES" target="_self" class="lang-circle-btn {active_es}">ES</a>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# Bouton FR
-st.markdown(f'<div class="{"active-lang" if st.session_state["lang"] == "FR" else ""}">', unsafe_allow_html=True)
-if st.button("FR", key="btn_lang_fr"):
-    st.session_state["lang"] = "FR"
-    st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Bouton GB
-st.markdown(f'<div class="{"active-lang" if st.session_state["lang"] == "EN" else ""}">', unsafe_allow_html=True)
-if st.button("GB", key="btn_lang_en"):
-    st.session_state["lang"] = "EN"
-    st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Bouton ES
-st.markdown(f'<div class="{"active-lang" if st.session_state["lang"] == "ES" else ""}">', unsafe_allow_html=True)
-if st.button("ES", key="btn_lang_es"):
-    st.session_state["lang"] = "ES"
-    st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Fermeture des conteneurs HTML
-st.markdown('</div></div>', unsafe_allow_html=True)
-
-
-# Sous-titre officiel placé juste en dessous
+# Sous-titre officiel placé juste en dessous de la ligne fixe
 st.write(t["subtitle"])
 
 # --- BARRE LATÉRALE ---

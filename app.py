@@ -109,10 +109,10 @@ TRADUCTIONS = {
         "agent1_desc": "* **Rol:** Analiza la estructura del PDF, segmenta el texto y extrae tablas de datos numéricos.\n* **Memoria:** Vectoriza y almacena temporalmente segmentos clave para búsquedas de documentos específicas.",
         "agent2_title": "🧠 2. Agente Analista",
         "agent2_tech": "**Tecnologías:** `LangChain` | `Vector Query` | `ChromaDB`",
-        "agent2_desc": "* **Rol:** Evalúa la salud financiera, calcula indicadores clave de rendement (EBITDA, márgenes) e identifica factores de riesgo macro/microeconómicos.\n* **Lógica:** Cruza los datos extraídos con modelos de riesgo financiero preestablecidos.",
+        "agent2_desc": "* **Rol:** Evalúa la salud financiera, calcula indicadores clave de rendimiento (EBITDA, márgenes) e identifica factores de riesgo macro/microeconómicos.\n* **Lógica:** Cruza los datos extraídos con modelos de riesgo financiero preestablecidos.",
         "agent3_title": "✍️ 3. Agente Redactor",
         "agent3_tech": "**Tecnologías:** `LangGraph` | `Groq Cloud` | `Llama 3`",
-        "agent3_desc": "* **Rol:** Sintetiza los hallazgos brutos del analista en un informe estructurado para el Consejo de Administración.\n* **Visualización:** Genera etiquetas de gráficos dinámicos (`Plotly`) e inyecta la structure visual final.",
+        "agent3_desc": "* **Rol:** Sintetiza los hallazgos brutos del analista en un informe estructurado para el Consejo de Administración.\n* **Visualización:** Genera etiquetas de gráficos dinámicos (`Plotly`) e inyecta la estructura visual final.",
         "infra_title": "💻 Infraestructura Tecnológica",
         "infra_desc": "* **Orquestación:** LangGraph (Stateful Dataflow)\n* **Inferencia:** Groq API (Ultra-low latency)\n* **Interfaz:** Streamlit Enterprise Layout",
         "choose_pdf": "Elegir un PDF",
@@ -121,7 +121,7 @@ TRADUCTIONS = {
         "step1": "🕵️‍♂️ Paso 1: El Agente Extractor escanea e indexa el documento...",
         "step2": "🧠 Paso 2: El Agente Analista evalúa los riesgos financieros...",
         "step3": "✍️ Paso 3: El Agente Redactor finaliza el resumen...",
-        "timer_estimated": "Tiempo estimado de carga: 22 segundos",
+        "timer_estimated": "Tiempo estimado de carga: 22 secondes",
         "delay1": "Disculpe, esto está tardando más de lo previsto...",
         "delay2": "Últimos retoques…",
         "done": "¡Análisis completado con éxito!",
@@ -138,7 +138,7 @@ TRADUCTIONS = {
 
 t = TRADUCTIONS[st.session_state["lang"]]
 
-# --- INJECTION CSS DE VERROUILLAGE SANS RETOUR À LA LIGNE ---
+# --- INJECTION CSS PREMIUM ET VERROUILLAGE DES BOUTONS DE LANGUE NATIFS ---
 st.markdown(
     """
     <style>
@@ -161,71 +161,64 @@ st.markdown(
         display: inline-block;
     }
     
-    /* Conteneur global en ligne unifiée absolue (Interdiction totale de retour à la ligne) */
-    .header-unified-line {
+    /* Ligne unifiée de l'en-tête (Pas de retour à la ligne) */
+    .header-unified-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 100%;
         white-space: nowrap;
-        margin-bottom: 20px;
-        gap: 30px;
+        margin-bottom: 5px;
     }
     
-    .header-unified-line h1 {
+    .header-unified-row h1 {
         margin: 0 !important;
         padding: 0 !important;
-        white-space: nowrap !important;
         font-size: 2.3rem !important;
+        white-space: nowrap !important;
     }
 
-    .lang-inline-group {
+    /* Bloc contenant les 3 boutons exclusifs de langue alignés horizontalement */
+    .lang-container-fixed {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
     }
 
-    /* Modèle visuel de cercle stable et immuable */
-    .circle-visual-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 700;
-        font-family: 'Inter', sans-serif;
-        background-color: #1E222A;
-        color: #B0B3B8;
-        border: 2px solid rgba(255,255,255,0.15);
-        position: relative;
+    /* Personnalisation absolue des boutons natifs de langue pour en faire des cercles stables */
+    .lang-container-fixed div[data-testid="stButton"] button {
+        border-radius: 50% !important;
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        max-width: 42px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        font-family: 'Inter', sans-serif !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: #1E222A !important;
+        color: #B0B3B8 !important;
+        border: 2px solid rgba(255, 255, 255, 0.15) !important;
+        transition: border 0.2s, box-shadow 0.2s, color 0.2s;
     }
 
-    .circle-visual-btn.active {
+    /* Cache le texte interne inutile ou l'icône vide par défaut de Streamlit */
+    .lang-container-fixed div[data-testid="stButton"] button p {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Bordure VERTE active pour l'élément sélectionné */
+    .lang-container-fixed .active-fr div[data-testid="stButton"] button,
+    .lang-container-fixed .active-en div[data-testid="stButton"] button,
+    .lang-container-fixed .active-es div[data-testid="stButton"] button {
         border: 2.5px solid #00E676 !important;
         box-shadow: 0 0 10px rgba(0, 230, 118, 0.4) !important;
         color: #FFFFFF !important;
-    }
-
-    /* Dissimulation transparente parfaite des boutons Streamlit par-dessus les cercles stables */
-    .invisible-hitbox {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 44px;
-        height: 44px;
-        opacity: 0;
-        z-index: 10;
-        cursor: pointer;
-    }
-    
-    .invisible-hitbox div[data-testid="stButton"],
-    .invisible-hitbox div[data-testid="stButton"] button {
-        width: 44px !important;
-        height: 44px !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
     
     @keyframes spin {
@@ -236,46 +229,40 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- RENDU DE LA LIGNE UNIQUE (TITRE COMPLET + BOUTONS SUR LA MÊME LIGNE) ---
-fr_active = "active" if st.session_state["lang"] == "FR" else ""
-en_active = "active" if st.session_state["lang"] == "EN" else ""
-es_active = "active" if st.session_state["lang"] == "ES" else ""
+# --- CREATION DE LA LIGNE UNIQUEMENT SUR UNE COLONNE SANS PARASITES ---
+col_title, col_langs = st.columns([7.8, 2.2])
 
-# Génération de la ligne en une seule structure HTML unifiée
-st.markdown(
-    f"""
-    <div class="header-unified-line">
-        <h1>{t['title']}</h1>
-        <div class="lang-inline-group">
-            <div class="circle-visual-btn {fr_active}">FR<div class="invisible-hitbox" id="click_fr"></div></div>
-            <div class="circle-visual-btn {en_active}">GB<div class="invisible-hitbox" id="click_gb"></div></div>
-            <div class="circle-visual-btn {es_active}">ES<div class="invisible-hitbox" id="click_es"></div></div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+with col_title:
+    st.markdown(f"<h1>{t['title']}</h1>", unsafe_allow_html=True)
 
-# Hack pour rendre les hitbox fonctionnelles via Streamlit sans casser la mise en page
-# On place les déclencheurs invisibles au même niveau logique
-hidden_cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-# Ces boutons captent le clic de manière transparente via l'injection
-with hidden_cols[9]:
-    if st.button(" ", key="btn_h_fr", help="Français"):
+with col_langs:
+    # On encapsule directement les vrais boutons configurés pour la sélection dans notre classe CSS
+    st.markdown('<div class="lang-container-fixed">', unsafe_allow_html=True)
+    
+    # 1. Bouton FR
+    st.markdown(f'<div class="{"active-fr" if st.session_state["lang"] == "FR" else ""}">', unsafe_allow_html=True)
+    if st.button("FR", key="lang_btn_fr"):
         st.session_state["lang"] = "FR"
         st.rerun()
-with hidden_cols[10]:
-    if st.button(" ", key="btn_h_en", help="English"):
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2. Bouton GB
+    st.markdown(f'<div class="{"active-en" if st.session_state["lang"] == "EN" else ""}">', unsafe_allow_html=True)
+    if st.button("GB", key="lang_btn_en"):
         st.session_state["lang"] = "EN"
         st.rerun()
-with hidden_cols[11]:
-    if st.button(" ", key="btn_h_es", help="Español"):
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 3. Bouton ES
+    st.markdown(f'<div class="{"active-es" if st.session_state["lang"] == "ES" else ""}">', unsafe_allow_html=True)
+    if st.button("ES", key="lang_btn_es"):
         st.session_state["lang"] = "ES"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<script>document.getElementById('click_fr').addEventListener('click', function() { document.querySelector('[key=\"btn_h_fr\"]').click(); });</script>", unsafe_allow_html=True)
-
-# Sous-titre officiel
+# Sous-titre officiel placé en dessous de l'ensemble unifié
 st.write(t["subtitle"])
 
 # --- BARRE LATÉRALE ---

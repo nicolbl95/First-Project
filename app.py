@@ -112,7 +112,7 @@ TRADUCTIONS = {
         "agent2_desc": "* **Rol:** Evalúa la salud financiera, calcula indicadores clave de rendimiento (EBITDA, márgenes) e identifica factores de riesgo macro/microeconómicos.\n* **Lógica:** Cruza los datos extraídos con modelos de riesgo financiero preestablecidos.",
         "agent3_title": "✍️ 3. Agente Redactor",
         "agent3_tech": "**Tecnologías:** `LangGraph` | `Groq Cloud` | `Llama 3`",
-        "agent3_desc": "* **Rol:** Sintetiza los hallazgos brutos del analista en un informe estructurado para el Consejo de Administración.\n* **Visualización:** Genera etiquetas de gráficos dinámicos (`Plotly`) e inyecta la estructura visual final.",
+        "agent3_desc": "* **Rol:** Sintetiza los hallazgos brutos del analista en un informe estruturado para el Consejo de Administración.\n* **Visualización:** Genera etiquetas de gráficos dinámicos (`Plotly`) e inyecta la estructura visual final.",
         "infra_title": "💻 Infraestructura Tecnológica",
         "infra_desc": "* **Orchestración:** LangGraph (Stateful Dataflow)\n* **Inferencia:** Groq API (Ultra-low latency)\n* **Interfaz:** Streamlit Enterprise Layout",
         "choose_pdf": "Elegir un PDF",
@@ -139,11 +139,9 @@ TRADUCTIONS = {
 t = TRADUCTIONS[st.session_state["lang"]]
 
 # --- INJECTION DU CODE COMPOSANT : EN-TÊTE HORIZONTALE COMPLÈTEMENT VERROUILLÉE ---
-# On intercepte et écrase les styles Streamlit natifs qui forcent les retours à la ligne dans le bloc supérieur
 st.markdown(
     """
     <style>
-    /* Forcer l'en-tête globale à rester sur une ligne avec Flexbox */
     .header-lock-row {
         display: flex !important;
         flex-direction: row !important;
@@ -163,7 +161,6 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Groupe de boutons horizontaux */
     .lang-container-row {
         display: flex !important;
         flex-direction: row !important;
@@ -171,7 +168,6 @@ st.markdown(
         align-items: center !important;
     }
 
-    /* Liens stylisés sous forme de boutons cercles parfaits */
     .lang-circle-btn {
         width: 44px !important;
         height: 44px !important;
@@ -194,7 +190,6 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* État actif : cercle vert éclatant */
     .lang-circle-btn.active {
         border: 2.5px solid #00E676 !important;
         box-shadow: 0 0 12px rgba(0, 230, 118, 0.4) !important;
@@ -229,7 +224,6 @@ st.markdown(
 )
 
 # --- CAPTURE DU PARAMÈTRE DE TRADUCTION DE L'URL ---
-# On utilise les query_params natifs pour changer de langue proprement au clic sur les cercles HTML
 query_params = st.query_params
 if "set_lang" in query_params:
     requested_lang = query_params["set_lang"]
@@ -237,7 +231,7 @@ if "set_lang" in query_params:
         st.session_state["lang"] = requested_lang
         st.rerun()
 
-# Rendu HTML pur de l'en-tête unifiée (Titre à gauche, Boutons en cercle à droite)
+# Rendu HTML pur de l'en-tête unifiée (Titre à gauche, Boutons EN CERCLES à droite avec "EN" au lieu de "GB")
 active_fr = "active" if st.session_state["lang"] == "FR" else ""
 active_en = "active" if st.session_state["lang"] == "EN" else ""
 active_es = "active" if st.session_state["lang"] == "ES" else ""
@@ -248,7 +242,7 @@ st.markdown(
         <h1>{t['title']}</h1>
         <div class="lang-container-row">
             <a href="?set_lang=FR" target="_self" class="lang-circle-btn {active_fr}">FR</a>
-            <a href="?set_lang=EN" target="_self" class="lang-circle-btn {active_en}">GB</a>
+            <a href="?set_lang=EN" target="_self" class="lang-circle-btn {active_en}">EN</a>
             <a href="?set_lang=ES" target="_self" class="lang-circle-btn {active_es}">ES</a>
         </div>
     </div>
@@ -256,7 +250,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Sous-titre officiel placé juste en dessous de la ligne fixe
 st.write(t["subtitle"])
 
 # --- BARRE LATÉRALE ---
@@ -296,6 +289,8 @@ def run_analysis(pdf_path: str):
         step3_placeholder.write(t["step3"])
 
         thread_result = {}
+        
+        # ICI : Forçage de la langue cible envoyée à l'IA selon la sélection active de l'utilisateur
         input_state: AgentState = {
             "pdf_path": pdf_path, 
             "language": st.session_state["lang"],

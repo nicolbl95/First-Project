@@ -131,14 +131,14 @@ TRADUCTIONS = {
         "risk_title": "🕵️‍♂️ Informe de Análisis de Riesgo Específico",
         "chart_complementary": "📊 *Elementos visuales adicionales requeridos por el protocolo financiero :*",
         "chart_title_extract": "📊 Indicadores Clave Extraídos del Informe",
-        "chart_title_struct": "🏛️ Estructura Global Simplificada",
+        "chart_title_struct": "🏛️ Estructura Global Simplifiée",
         "btn_analysis": "Ejecutar Análisis IA"
     }
 }
 
 t = TRADUCTIONS[st.session_state["lang"]]
 
-# --- INJECTION CSS PREMIUM POUR LES ICONES DE LANGUE ET L'ANIMATION ---
+# --- INJECTION CSS COMPLET CIBLÉ ET COMPATIBLE ---
 st.markdown(
     """
     <style>
@@ -171,26 +171,48 @@ st.markdown(
         animation: fadeIn 0.5s ease-in-out;
     }
     
-    /* Ciblage spécifique et customisation des boutons de langue */
-    div[data-testid="stButton"] button {
+    /* Conteneur global pour maintenir les icônes alignés horizontalement */
+    .lang-container-box {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        align-items: center;
+        width: 100%;
+        margin-bottom: -10px;
+    }
+
+    /* Ciblage STRICT des boutons se trouvant UNIQUEMENT dans notre boîte de langues */
+    .lang-container-box div[data-testid="stButton"] button {
         border-radius: 50% !important;
-        width: 42px !important;
-        height: 42px !important;
+        width: 65px !important;
+        height: 65px !important;
         padding: 0 !important;
-        font-size: 20px !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
         display: flex !important;
+        flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
         border: 2px solid rgba(255,255,255,0.1) !important;
         background-color: #1E222A !important;
-        transition: all 0.3s ease;
+        color: #FFFFFF !important;
+        transition: all 0.25s ease-in-out;
+        line-height: 1.2 !important;
+    }
+
+    /* Permet d'ajuster l'alignement de l'émoji drapeau et du texte à l'intérieur */
+    .lang-container-box div[data-testid="stButton"] button p {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
     }
     
-    /* Classe injectée dynamiquement pour l'état actif (entouré de vert) */
-    .active-lang-btn div[data-testid="stButton"] button {
+    /* État actif : Entouré de vert fluo avec ombre portée */
+    .lang-container-box .active-lang-btn div[data-testid="stButton"] button {
         border: 3px solid #00E676 !important;
-        box-shadow: 0 0 10px rgba(0, 230, 118, 0.4) !important;
-        transform: scale(1.08);
+        box-shadow: 0 0 12px rgba(0, 230, 118, 0.5) !important;
+        transform: scale(1.05);
     }
     
     @keyframes spin {
@@ -205,35 +227,41 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- RENDU DES 3 BOUTONS DE LANGUE TOUT EN HAUT À DROITE ---
-top_col1, top_col2, top_col3, top_col4 = st.columns([8.5, 0.5, 0.5, 0.5])
+# --- RENDU DES 3 BOUTONS DE LANGUE TOUT EN HAUT À DROITE SUR UNE MÊME LIGNE ---
+top_col1, top_col2 = st.columns([7.5, 2.5])
 
 with top_col2:
+    # Utilisation d'un conteneur HTML Flexbox pour forcer l'alignement sur une seule ligne
+    st.markdown('<div class="lang-container-box">', unsafe_allow_html=True)
+    
+    # Bouton Français
     if st.session_state["lang"] == "FR":
         st.markdown('<div class="active-lang-btn">', unsafe_allow_html=True)
-    if st.button("🇫🇷", key="btn_fr"):
+    if st.button("🇫🇷\nFR", key="btn_fr"):
         st.session_state["lang"] = "FR"
         st.rerun()
     if st.session_state["lang"] == "FR":
         st.markdown('</div>', unsafe_allow_html=True)
 
-with top_col3:
+    # Bouton Anglais
     if st.session_state["lang"] == "EN":
         st.markdown('<div class="active-lang-btn">', unsafe_allow_html=True)
-    if st.button("🇬🇧", key="btn_en"):
+    if st.button("🇬🇧\nGB", key="btn_en"):
         st.session_state["lang"] = "EN"
         st.rerun()
     if st.session_state["lang"] == "EN":
         st.markdown('</div>', unsafe_allow_html=True)
 
-with top_col4:
+    # Bouton Espagnol
     if st.session_state["lang"] == "ES":
         st.markdown('<div class="active-lang-btn">', unsafe_allow_html=True)
-    if st.button("🇪🇸", key="btn_es"):
+    if st.button("🇪🇸\nES", key="btn_es"):
         st.session_state["lang"] = "ES"
         st.rerun()
     if st.session_state["lang"] == "ES":
         st.markdown('</div>', unsafe_allow_html=True)
+        
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 st.title(t["title"])
@@ -276,7 +304,6 @@ def run_analysis(pdf_path: str):
         step3_placeholder.write(t["step3"])
 
         thread_result = {}
-        # PASSAGE DES PARAMÈTRES DE LANGUE À L'IA : Permet d'analyser n'importe quel rapport d'origine et de forcer la rédaction finale
         input_state: AgentState = {
             "pdf_path": pdf_path, 
             "language": st.session_state["lang"],
@@ -319,14 +346,14 @@ def run_analysis(pdf_path: str):
         result = thread_result.get("output")
         
         if st.session_state["lang"] == "EN":
-            completed_text, seconds_text = "✅ Analysis executed in", "seconds (Completed)"
+            completed_text, seconds_text = "Analysis executed in", "seconds (Completed)"
         elif st.session_state["lang"] == "ES":
-            completed_text, seconds_text = "✅ Análisis ejecutado en", "segundos (Completado)"
+            completed_text, seconds_text = "Análisis ejecutado en", "segundos (Completado)"
         else:
-            completed_text, seconds_text = "✅ Analyse exécutée en", "secondes (Terminé)"
+            completed_text, seconds_text = "Analyse exécutée en", "secondes (Terminé)"
         
         timer_placeholder.markdown(
-            f'<div class="loading-container">{completed_text} {int(total_duration)} {seconds_text}</div>', 
+            f'<div class="loading-container">✅ {completed_text} {int(total_duration)} {seconds_text}</div>', 
             unsafe_allow_html=True
         )
         
@@ -401,7 +428,6 @@ def display_requested_chart(chart_type, report_label, key):
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
         return
 
-    # Graphiques d'exemples
     if chart_type == "STYLE_BARRES":
         fig = go.Figure()
         if report_label == "OmniDrive":

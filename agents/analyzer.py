@@ -34,10 +34,21 @@ def get_analyzer_llm():
 
 
 def analyze_risks(state):
+    # 1. Récupération sécurisée du texte brut et de la langue (FR par défaut)
     if isinstance(state, dict):
         raw_text = state.get("raw_text", "")
+        lang = state.get("language", "FR")
     else:
         raw_text = state.raw_text
+        lang = getattr(state, "language", "FR")
+
+    # 2. Cartographie de la langue cible pour forcer le LLM à s'adapter
+    lang_mapping = {
+        "FR": "français (French)",
+        "EN": "anglais (English)",
+        "ES": "espagnol (Spanish)"
+    }
+    target_language_name = lang_mapping.get(lang, "français (French)")
 
     client = chromadb.Client()
     collection = client.get_or_create_collection("financial_doc")
@@ -55,7 +66,10 @@ def analyze_risks(state):
     analyse_generee = None
 
     if llm is not None:
-        prompt = f"""Tu es un analyste financier senior expert en gestion des risques.
+        # 3. PROMPT MODIFIÉ : Ordre absolu de rédiger dans la langue cible dès le départ
+        prompt = f"""You are a senior financial analyst and risk management expert.
+CRITICAL LANGUAGE DIRECTIVE: You must write the entire output, response, headers, and professional analysis exclusively in {target_language_name}. Do NOT use any other language.
+
 À partir des données extraites du document, rédige une analyse détaillée des risques financiers de l'entreprise.
 Structure ta réponse avec des paragraphes fluides, rédigés et professionnels.
 
@@ -74,11 +88,25 @@ Données du document :
         except Exception:
             analyse_generee = None
 
+    # 4. Traduction dynamique du mode de secours selon le choix de l'utilisateur
     if not analyse_generee:
-        analyse_generee = (
-            "### Analyse des Risques (Mode de secours)\n\n"
-            "Aucun backend IA disponible ou erreur de génération. Voici le contexte extrait :\n\n"
-            f"{contexte_propre}"
-        )
+        if lang == "EN":
+            analyse_generee = (
+                "### Risk Analysis (Backup Mode)\n\n"
+                "No AI backend available or generation error. Here is the extracted context:\n\n"
+                f"{contexte_propre}"
+            )
+        elif lang == "ES":
+            analyse_generee = (
+                "### Análisis de Riesgos (Modo de Reserva)\n\n"
+                "No hay backend de IA disponible o error de generación. Aquí está el contexto extraído:\n\n"
+                f"{contexte_propre}"
+            )
+        else:
+            analyse_generee = (
+                "### Analyse des Risques (Mode de secours)\n\n"
+                "Aucun backend IA disponible ou erreur de génération. Voici le contexte extrait :\n\n"
+                f"{contexte_propre}"
+            )
 
     return {"analysis": analyse_generee}

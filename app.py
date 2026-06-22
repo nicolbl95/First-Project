@@ -470,7 +470,15 @@ if "last_analysis_result" not in st.session_state and "last_analyzed_path" in st
 # Déclenchement automatique immédiat lors du changement de langue via l'en-tête
     run_analysis(st.session_state["last_analyzed_path"])
 
-elif selected_example_label is not None and selected_example is not None:
+# ====================================================================
+# 1. ON DÉFINIT LE COMPOSANT DE TÉLÉCHARGEMENT ICI (Sous les boutons d'exemples)
+# ====================================================================
+uploaded_file = st.file_uploader(t["choose_pdf"], type="pdf")
+
+# ====================================================================
+# 2. LES ACTIONS (CLICS SUR LES BOUTONS OU LE CUSTOM UPLOAD)
+# ====================================================================
+if selected_example_label is not None and selected_example is not None:
     if not os.path.exists(selected_example):
         if st.session_state["lang"] == "EN":
             st.error(f"File '{selected_example_label}' not found.")
@@ -479,27 +487,7 @@ elif selected_example_label is not None and selected_example is not None:
     else:
         run_analysis(selected_example)
 
-# ==========================================
-# ETAPE 1 : ON MET LE RENDU DE L'ANALYSE ICI (Juste en dessous des boutons d'exemples)
-# ==========================================
-if "last_analysis_result" in st.session_state:
-    result = st.session_state["last_analysis_result"]
-    active_report = st.session_state.get("active_label", "Analyse")
-    st.markdown("---")
-    # Appel de la fonction pour le graphique unique et dynamique
-    render_dynamic_content_with_single_chart(
-        result.get("analysis", ""), 
-        result.get("summary", ""), 
-        active_report
-    )
-
-# ==========================================
-# ETAPE 2 : LE ZONE DE CHARGEMENT DE PDF TOUT EN BAS DE LA PAGE
-# ==========================================
-st.markdown("---") # Petite ligne de séparation visuelle pour faire propre
-uploaded_file = st.file_uploader(t["choose_pdf"], type="pdf")
-
-if uploaded_file and st.button(t["btn_analysis"]):
+elif uploaded_file and st.button(t["btn_analysis"]):
     import tempfile  # Sécurité d'import local
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(uploaded_file.read())
@@ -513,6 +501,18 @@ if uploaded_file and st.button(t["btn_analysis"]):
     
     if os.path.exists(tmp_path): 
         os.unlink(tmp_path)
-    
-    # Force Streamlit à recharger immédiatement pour afficher le nouveau rapport au bon endroit
     st.rerun()
+
+# ====================================================================
+# 3. LE RENDU DE L'ANALYSE ET DU GRAPHIQUE (TOUJOURS TOUT EN BAS)
+# ====================================================================
+if "last_analysis_result" in st.session_state:
+    result = st.session_state["last_analysis_result"]
+    active_report = st.session_state.get("active_label", "Analyse")
+    st.markdown("---")
+    # Appel de la fonction pour le graphique unique et dynamique
+    render_dynamic_content_with_single_chart(
+        result.get("analysis", ""), 
+        result.get("summary", ""), 
+        active_report
+    )

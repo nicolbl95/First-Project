@@ -71,13 +71,11 @@ def write_summary(state):
 CRITICAL LANGUAGE DIRECTIVE: You must write the entire output, response, headers, and executive summary exclusively in {target_language_name}. Do NOT use any other language.
 
 À partir de l'analyse détaillée des risques ci-dessous, rédige une synthèse exécutive (Summary) claire, concise et percutante.
-Structure ta réponse sous forme de paragraphes fluides (pas de style haché ligne par ligne).
 
-CRITIQUE : Tu DOIS enrichir visuellement cette synthèse en y insérant EXACTEMENT 1 seule balise graphique personnalisée sur sa propre ligne. 
-Cette balise doit être unique et liée aux chiffres réels du texte. Génère-la sous ce format exact :
-[DYNAMIC_GRAPH:Type_De_Donnée_Clé_Ici] (Exemple : [DYNAMIC_GRAPH:Evolution_CA_2025_2026] ou [DYNAMIC_GRAPH:Repartition_Dette])
+CRITIQUE : Tu DOIS obligatoirement citer des chiffres clés importants dans ton texte, ET insérer EXACTEMENT 1 seule balise graphique personnalisée sur sa propre ligne.
+Pour que le graphique corresponde parfaitement, extrais 3 métriques chiffrées clés spécifiques que tu as écrites dans ton texte et génère la balise sous ce format strict (en une seule ligne sans espaces superflus) :
 
-Ne propose AUCUN autre graphique générique. 1 seul graphique sur mesure est toléré.
+[DYNAMIC_GRAPH:{{"title": "Titre Unique du Rapport", "labels": ["Indicateur1", "Indicateur2", "Indicateur3"], "values": [12.5, 45.0, 22.1]}}]
 
 Analyse détaillée :
 {analysis}"""

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import threading
+import importlib  # AJOUT CRITIQUE pour vider le cache Python
 
 # 1. Configurer la variable d'environnement Protobuf
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -11,22 +12,40 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-sys.modules['agents'] = __import__('agents')
+# Force la purge du cache d'importation de Python pour appliquer vos modifications d'agents
+if 'agents' in sys.modules:
+    importlib.reload(sys.modules['agents'])
+if 'agents.analyzer' in sys.modules:
+    importlib.reload(sys.modules['agents.analyzer'])
+if 'agents.writer' in sys.modules:
+    importlib.reload(sys.modules['agents.writer'])
+if 'graph_builder' in sys.modules:
+    importlib.reload(sys.modules['graph_builder'])
 
 import streamlit as st
 import tempfile
 import plotly.graph_objects as go
 import plotly.express as px
-from graph_builder import AgentState, build_graph
 
-# On initialise le graphe une seule fois au chargement global
+# On importe et initialise le graphe APRÈS avoir nettoyé le cache des fichiers
+from graph_builder import AgentState, build_graph
 graph = build_graph()
 
 st.set_page_config(page_title="Analyseur Financier IA", page_icon="📊", layout="wide")
 
 # --- GESTION DE LA TRADUCTION ET DES 3 LANGUES ---
+# On récupère les paramètres d'URL (?set_lang=...) AVANT d'initialiser st.session_state
+query_params = st.query_params
+if "set_lang" in query_params:
+    requested_lang = query_params["set_lang"]
+    if requested_lang in ["FR", "EN"]:
+        st.session_state["lang"] = requested_lang
+
+# Langue par défaut si rien n'est sélectionné
 if "lang" not in st.session_state:
-    st.session_state["lang"] = "FR"  # Français par défaut
+    st.session_state["lang"] = "FR"
+elif st.session_state["lang"] not in ["FR", "EN"]:
+    st.session_state["lang"] = "FR"
 
 TRADUCTIONS = {
     "FR": {
@@ -98,155 +117,65 @@ TRADUCTIONS = {
         "chart_title_extract": "📊 Key Indicators Extracted from Report",
         "chart_title_struct": "🏛️ Simplified Global Structure",
         "btn_analysis": "Run AI Analysis"
-    },
-    "ES": {
-        "title": "Asistente IA — Análisis Financiero Multi-Agente",
-        "subtitle": "Suba un informe financiero en PDF de menos de 20 páginas. 3 agentes de IA lo analizan en secuencia.",
-        "sidebar_title": "Arquitectura del Systema",
-        "sidebar_subtitle": "Estructura secuencial orquestada por un gráfico de agentes inteligentes.",
-        "agent1_title": "🕵️‍♂️ 1. Agente Extractor",
-        "agent1_tech": "**Tecnologías:** `PyPDF` | `ChromaDB` | `RAG`",
-        "agent1_desc": "* **Rol:** Analiza la estructura del PDF, segmenta el texto y extrae tablas de datos numéricos.\n* **Memoria:** Vectoriza y almacena temporalmente segmentos clave para búsquedas de documentos específicas.",
-        "agent2_title": "🧠 2. Agente Analista",
-        "agent2_tech": "**Technologies:** `LangChain` | `Vector Query` | `ChromaDB`",
-        "agent2_desc": "* **Rol:** Evalúa la salud financiera, calcula indicadores clave de rendimiento (EBITDA, márgenes) e identifica factores de riesgo macro/microeconómicos.\n* **Lógica:** Cruza los datos extraídos con modelos de riesgo financiero preestablecidos.",
-        "agent3_title": "✍️ 3. Agente Redactor",
-        "agent3_tech": "**Tecnologías:** `LangGraph` | `Groq Cloud` | `Llama 3`",
-        "agent3_desc": "* **Rol:** Sintetiza los hallazgos brutos del analista en un informe estructurado para el Consejo de Administración.\n* **Visualización:** Genera etiquetas de gráficos dinámicos (`Plotly`) e inyecta la estructura visual final.",
-        "infra_title": "💻 Infraestructura Tecnológica",
-        "infra_desc": "* **Orchestración:** LangGraph (Stateful Dataflow)\n* **Inferencia:** Groq API (Ultra-low latency)\n* **Interfaz:** Streamlit Enterprise Layout",
-        "choose_pdf": "Elegir un PDF",
-        "example_pdf": "O seleccione un informe PDF de muestra para iniciar el análisis de inmediato 🔽",
-        "status_processing": "Procesando el documento por agentes de IA...",
-        "step1": "🕵️‍♂️ Paso 1: El Agente Extractor escanea e indexa el documento...",
-        "step2": "🧠 Paso 2: El Agente Analista evalúa los riesgos financieros...",
-        "step3": "✍️ Paso 3: El Agente Redactor finaliza el resumen...",
-        "timer_estimated": "Tiempo estimado de carga: 22 secondes",
-        "delay1": "Disculpe, esto está tardando más de lo previsto...",
-        "delay2": "Últimos retoques…",
-        "done": "¡Análisis completado con éxito!",
-        "error_msg": "Ocurrió un error durante el análisis:",
-        "error_tip": "💡 Consejo para documentos grandes: Intente aislar solo las páginas del balance y del estado de resultados antes de subirlas.",
-        "section_break": "✍️ Resumen Ejecutivo para el Consejo de Administración",
-        "risk_title": "🕵️‍♂️ Informe de Análisis de Riesgo Específico",
-        "chart_complementary": "📊 *Elementos visuales adicionales requeridos por el protocolo financiero :*",
-        "chart_title_extract": "📊 Indicadores Clave Extraídos del Informe",
-        "chart_title_struct": "🏛️ Estructura Global Simplificada",
-        "btn_analysis": "Ejecutar Análisis IA"
     }
 }
 
-t = TRADUCTIONS[st.session_state["lang"]]
-
+t = TRADUCTIONS.get(st.session_state["lang"], TRADUCTIONS["FR"])
 # --- INJECTION DU CODE COMPOSANT : EN-TÊTE HORIZONTALE COMPLÈTEMENT VERROUILLÉE ---
-st.markdown(
-    """
-    <style>
-    .header-lock-row {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100% !important;
-        margin-bottom: 20px !important;
-        padding-bottom: 10px !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-    .header-lock-row h1 {
-        margin: 0 !important;
-        padding: 0 !important;
-        font-size: 2.1rem !important;
-        font-weight: 700 !important;
-        color: #FFFFFF !important;
-    }
-    .lang-container-row {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 12px !important;
-        align-items: center !important;
-    }
-    .lang-circle-btn {
-        width: 44px !important;
-        height: 44px !important;
-        border-radius: 50% !important;
-        background-color: #1E222A !important;
-        color: #B0B3B8 !important;
-        border: 2px solid rgba(255, 255, 255, 0.15) !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-decoration: none !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    .lang-circle-btn:hover {
-        border-color: rgba(255, 255, 255, 0.4) !important;
-        color: #FFFFFF !important;
-    }
-    .lang-circle-btn.active {
-        border: 2.5px solid #00E676 !important;
-        box-shadow: 0 0 12px rgba(0, 230, 118, 0.4) !important;
-        color: #FFFFFF !important;
-        background-color: #14171C !important;
-    }
-    .loading-container {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 15px;
-        font-size: 16px;
-        font-weight: 500;
-    }
-    .custom-spinner {
-        width: 18px;
-        height: 18px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-top-color: #00E5FF;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        display: inline-block;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# ==============================================================================
+# BLOC DE REMPLACEMENT POUR L'EN-TÊTE ET LES BOUTONS DE LANGUE (Dans app.py)
+# ==============================================================================
 
-# --- CAPTURE ET RÉINITIALISATION DE LA SESSION AU CHANGEMENT DE LANGUE ---
-query_params = st.query_params
-if "set_lang" in query_params:
-    requested_lang = query_params["set_lang"]
-    if requested_lang in ["FR", "EN", "ES"] and requested_lang != st.session_state["lang"]:
-        st.session_state["lang"] = requested_lang
-        # Supprime le résultat précédent pour forcer la régénération immédiate dans la nouvelle langue
-        if "last_analysis_result" in st.session_state:
-            del st.session_state["last_analysis_result"]
-        st.rerun()
+# Style CSS : boutons FR/EN circulaires, boutons PDF rectangulaires par défaut
+st.markdown("""
+<style>
+/* Seuls les boutons FR/EN dans la colonne d'en-tête (2e colonne du 1er bloc horizontal) sont circulaires */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) div.stButton > button {
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    padding: 0 !important;
+    border: 2px solid #555 !important;
+    font-weight: bold !important;
+}
 
-active_fr = "active" if st.session_state["lang"] == "FR" else ""
-active_en = "active" if st.session_state["lang"] == "EN" else ""
-active_es = "active" if st.session_state["lang"] == "ES" else ""
+/* Style actif pour les boutons FR/EN circulaires */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) div.stButton > button.active {
+    border: 3px solid #00E676 !important;
+    box-shadow: 0 0 10px #00E676 !important;
+}
 
-st.markdown(
-    f"""
-    <div class="header-lock-row">
-        <h1>{t['title']}</h1>
-        <div class="lang-container-row">
-            <a href="?set_lang=FR" target="_self" class="lang-circle-btn {active_fr}">FR</a>
-            <a href="?set_lang=EN" target="_self" class="lang-circle-btn {active_en}">EN</a>
-            <a href="?set_lang=ES" target="_self" class="lang-circle-btn {active_es}">ES</a>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+/* Boutons de téléchargement rectangulaires */
+button[data-baseweb="button"][kind="downloadButton"],
+[data-testid="stDownloadButton"] button {
+    border-radius: 4px !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 8px 16px !important;
+    border: 1px solid #555 !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
-st.write(t["subtitle"])
+# 1. Création d'une structure en colonnes propre : 4/5 pour le titre, 1/5 pour les boutons
+col_title, col_lang = st.columns([4, 1])
+
+with col_title:
+    # Affiche le titre et sous-titre traduits dynamiquement
+    st.title(t["title"])
+    st.subheader(t["subtitle"])
+
+with col_lang:
+    c1, c2 = st.columns([1, 1])
+
+    with c1:
+        if st.button("FR", key="btn_fr", type="primary" if st.session_state["lang"] == "FR" else "secondary"):
+            st.session_state["lang"] = "FR"
+            st.rerun()
+    with c2:
+        if st.button("EN", key="btn_en", type="primary" if st.session_state["lang"] == "EN" else "secondary"):
+            st.session_state["lang"] = "EN"
+            st.rerun()
 
 # --- BARRE LATÉRALE ---
 with st.sidebar:
@@ -283,7 +212,7 @@ def run_analysis(pdf_path: str):
         step3_placeholder.write(t["step3"])
 
         thread_result = {}
-        lang_full_names = {"FR": "French", "EN": "English", "ES": "Spanish"}
+        lang_full_names = {"FR": "French", "EN": "English"}
         chosen_lang_name = lang_full_names.get(st.session_state["lang"], "French")
         
         # Injection stricte des consignes linguistiques dans l'état de flux envoyé à LangGraph
@@ -329,8 +258,6 @@ def run_analysis(pdf_path: str):
         
         if st.session_state["lang"] == "EN":
             completed_text, seconds_text = "Analysis executed in", "seconds (Completed)"
-        elif st.session_state["lang"] == "ES":
-            completed_text, seconds_text = "Análisis ejecutado en", "segundos (Completado)"
         else:
             completed_text, seconds_text = "Analyse exécutée en", "secondes (Terminé)"
         
@@ -364,16 +291,18 @@ def display_requested_chart(chart_type, report_label, key):
     if report_label not in ["BioSensus 2025", "TechNova", "OmniDrive"]:
         if chart_type == "STYLE_BARRES":
             fig = go.Figure()
-            if st.session_state["lang"] == "EN": x_labels = ['Debt / Equity', 'Operating Margin', 'Yield']
-            elif st.session_state["lang"] == "ES": x_labels = ['Deuda / Capital', 'Margen Operativo', 'Rendimiento']
-            else: x_labels = ['Dette / Équité', 'Marge Opérationnelle', 'Rendement']
+            if st.session_state["lang"] == "EN":
+                x_labels = ['Debt / Equity', 'Operating Margin', 'Yield']
+            else:
+                x_labels = ['Dette / Équité', 'Marge Opérationnelle', 'Rendement']
             fig.add_trace(go.Bar(x=x_labels, y=[42.5, 14.8, 8.2], marker=dict(color=THEME_COLORS["primary"], cornerradius=6), text=['42.5%', '14.8%', '8.2%'], textposition='auto'))
             apply_premium_layout(fig, t["chart_title_extract"])
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
         else:
-            if st.session_state["lang"] == "EN": names_labels = ['Current Assets', 'Fixed Assets']
-            elif st.session_state["lang"] == "ES": names_labels = ['Activos Corrientes', 'Activos Fijos']
-            else: names_labels = ['Activos Courants', 'Immobilisations']
+            if st.session_state["lang"] == "EN":
+                names_labels = ['Current Assets', 'Fixed Assets']
+            else:
+                names_labels = ['Actifs Courants', 'Immobilisations']
             fig = px.pie(values=[65, 35], names=names_labels, hole=0.55, color_discrete_sequence=[THEME_COLORS["success"], THEME_COLORS["secondary"]])
             apply_premium_layout(fig, t["chart_title_struct"])
             fig.update_layout(showlegend=False)
@@ -384,87 +313,104 @@ def display_requested_chart(chart_type, report_label, key):
         fig = go.Figure()
         if report_label == "OmniDrive":
             fig.add_trace(go.Bar(x=['2024', '2025'], y=[48.12, 62.45], text=['48.12 M€', '62.45 M€'], textposition='auto', marker=dict(color=THEME_COLORS["primary"], cornerradius=8)))
-            title = "📈 Revenue Trajectory" if st.session_state["lang"] == "EN" else ("📈 Trayectoria de Ingresos" if st.session_state["lang"] == "ES" else "📈 Trajectoire & Croissance du Chiffre d'Affaires")
+            title = "📈 Revenue Trajectory" if st.session_state["lang"] == "EN" else "📈 Trajectoire & Croissance du Chiffre d'Affaires"
         elif report_label == "TechNova":
-            if st.session_state["lang"] == "EN": categories = ['Gross Margin', 'R&D Investments', 'EBITDA']
-            elif st.session_state["lang"] == "ES": categories = ['Margen Bruto', 'Inversiones I+D', 'EBITDA']
-            else: categories = ['Marge Brute', 'R&D Investissements', 'EBITDA']
+            if st.session_state["lang"] == "EN":
+                categories = ['Gross Margin', 'R&D Investments', 'EBITDA']
+            else:
+                categories = ['Marge Brute', 'R&D Investissements', 'EBITDA']
             values = [32.14, 18.5, 12.91]
             fig.add_trace(go.Bar(x=categories, y=values, marker=dict(color=[THEME_COLORS["primary"], THEME_COLORS["secondary"], THEME_COLORS["success"]], cornerradius=6), text=[f"{v} M€" for v in values], textposition='auto'))
-            title = "⚡ Operational Indicators" if st.session_state["lang"] == "EN" else ("⚡ Indicadores Operativos" if st.session_state["lang"] == "ES" else "⚡ Indicateurs de Performance Opérationnelle")
+            title = "⚡ Operational Indicators" if st.session_state["lang"] == "EN" else "⚡ Indicateurs de Performance Opérationnelle"
         elif report_label == "BioSensus 2025":
-            if st.session_state["lang"] == "EN": categories = ['Gross Margin', 'Adjusted EBITDA', 'Operating Income (EBIT)']
-            elif st.session_state["lang"] == "ES": categories = ['Margen Bruto', 'EBITDA Ajustado', 'Resultado Operativo (EBIT)']
-            else: categories = ['Marge Brute', 'EBITDA Ajusté', 'Résultat Opérationnel (EBIT)']
+            if st.session_state["lang"] == "EN":
+                categories = ['Gross Margin', 'Adjusted EBITDA', 'Operating Income (EBIT)']
+            else:
+                categories = ['Marge Brute', 'EBITDA Ajusté', 'Résultat Opérationnel (EBIT)']
             values = [32.02, 14.15, 8.92]
             fig.add_trace(go.Bar(x=categories, y=values, marker=dict(color=[THEME_COLORS["success"], THEME_COLORS["warning"], THEME_COLORS["primary"]], cornerradius=6), text=[f"{v} M€" for v in values], textposition='auto'))
-            title = "📊 Financial Margins" if st.session_state["lang"] == "EN" else ("📊 Márgenes Financieros" if st.session_state["lang"] == "ES" else "📊 Soldes Intermédiaires de Gestion & Marges")
+            title = "📊 Financial Margins" if st.session_state["lang"] == "EN" else "📊 Soldes Intermédiaires de Gestion & Marges"
         apply_premium_layout(fig, title)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
 
     elif chart_type == "STYLE_DONUT_OU_LIGNE":
         if report_label == "TechNova":
             fig = go.Figure()
-            if st.session_state["lang"] == "EN": x_axis = ['2024', '2025', '2026 Forecast']
-            elif st.session_state["lang"] == "ES": x_axis = ['2024', '2025', 'Previsión 2026']
-            else: x_axis = ['2024', '2025', 'Prévisions 2026']
+            if st.session_state["lang"] == "EN":
+                x_axis = ['2024', '2025', '2026 Forecast']
+            else:
+                x_axis = ['2024', '2025', 'Prévisions 2026']
             fig.add_trace(go.Scatter(x=x_axis, y=[59.3, 84.15, 120.0], mode='lines+markers', line=dict(color=THEME_COLORS["warning"], width=4, shape="spline"), marker=dict(size=8, color="#FFFFFF", line=dict(color=THEME_COLORS["warning"], width=2))))
-            title = "📉 Growth Trajectory" if st.session_state["lang"] == "EN" else ("📉 Trayectoria de Crecimiento" if st.session_state["lang"] == "ES" else "📉 Trajectoire Spécifique de Croissance Pluriannuelle")
+            title = "📉 Growth Trajectory" if st.session_state["lang"] == "EN" else "📉 Trajectoire Spécifique de Croissance Pluriannuelle"
             apply_premium_layout(fig, title)
         else:
             if report_label == "OmniDrive":
-                if st.session_state["lang"] == "EN": labels = ['SaaS Cloud', 'Hardware']
-                elif st.session_state["lang"] == "ES": labels = ['SaaS Cloud', 'Hardware']
-                else: labels = ['SaaS Cloud (Abonnements)', 'Matériel & Intégration Usines']
+                if st.session_state["lang"] == "EN":
+                    labels = ['SaaS Cloud', 'Hardware']
+                else:
+                    labels = ['SaaS Cloud (Abonnements)', 'Matériel & Intégration Usines']
                 values = [28.90, 33.55]
                 colors = [THEME_COLORS["primary"], THEME_COLORS["secondary"]]
-                title = "🎯 Breakdown Matrix" if st.session_state["lang"] == "EN" else ("🎯 Matriz de Distribución" if st.session_state["lang"] == "ES" else "🎯 Ventilation Matrix (SaaS vs Matériel)")
+                title = "🎯 Breakdown Matrix" if st.session_state["lang"] == "EN" else "🎯 Ventilation Matrix (SaaS vs Matériel)"
             else: 
-                if st.session_state["lang"] == "EN": labels = ['Equity', 'Total Debt']
-                elif st.session_state["lang"] == "ES": labels = ['Capital Propio', 'Deuda Total']
-                else: labels = ['Capitaux Propres', 'Dette Globale']
+                if st.session_state["lang"] == "EN":
+                    labels = ['Equity', 'Total Debt']
+                else:
+                    labels = ['Capitaux Propres', 'Dette Globale']
                 values = [31.2, 22.5]
                 colors = [THEME_COLORS["success"], THEME_COLORS["danger"]]
-                title = "🏛️ Funding Structure" if st.session_state["lang"] == "EN" else ("🏛️ Estructura de Financiación" if st.session_state["lang"] == "ES" else "🏛️ Équilibre du Financement")
+                title = "🏛️ Funding Structure" if st.session_state["lang"] == "EN" else "🏛️ Équilibre du Financement"
             fig = px.pie(values=values, names=labels, hole=0.55, color_discrete_sequence=colors)
             fig.update_traces(textposition='outside', textinfo='percent+label')
             apply_premium_layout(fig, title)
             fig.update_layout(showlegend=False)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=key)
 
-def render_dynamic_content_with_strict_two_charts(analysis_text, summary_text, report_label):
+def render_dynamic_content_with_single_chart(analysis_text, summary_text, report_label):
     full_text = f"{analysis_text}\n---SECTION_BREAK---\n{summary_text}"
     lines = full_text.split("\n")
-    charts_rendered = 0
+    chart_rendered = False  # On passe à un simple indicateur Vrai/Faux
+    
     for idx, line in enumerate(lines):
         if "---SECTION_BREAK---" in line:
             st.markdown("---")
             st.subheader(t["section_break"])
             continue
-        is_tag = any(tag in line for tag in ["[GRAPH_EVOLUTION]", "[GRAPH_REPARTITION]", "[GRAPH_PERFORMANCE]"])
-        if is_tag:
-            chart_key = f"dynamic_chart_strict_{idx}"
-            if charts_rendered == 0:
+            
+        # 1. On intercepte la nouvelle balise dynamique
+        if "[DYNAMIC_GRAPH:" in line:
+            if not chart_rendered:  # Sécurité pour n'en afficher qu'un seul maximum
+                chart_key = f"dynamic_chart_single_{idx}"
+                
+                # Extraction propre du type/titre du graphique
+                try:
+                    start = line.find("[DYNAMIC_GRAPH:") + len("[DYNAMIC_GRAPH:")
+                    end = line.find("]", start)
+                    extracted_title = line[start:end].replace("_", " ")
+                except Exception:
+                    extracted_title = "Analyse Personnalisée"
+                
+                st.markdown("---")
+                st.subheader(f"📊 Graphique : {extracted_title}")
+                
+                # 2. On appelle la fonction d'affichage en lui passant le style voulu
+                # On utilise 'report_label' pour garantir que les chiffres dépendent du document chargé !
                 display_requested_chart("STYLE_BARRES", report_label, chart_key)
-                charts_rendered += 1
-            elif charts_rendered == 1:
-                display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, chart_key)
-                charts_rendered += 1
+                
+                chart_rendered = True
+            continue  # On ne print pas la ligne contenant la balise brute
+            
+        # Affichage du texte normal
         else:
             if idx == 0 and "---SECTION_BREAK---" not in lines[0]:
                 st.subheader(t["risk_title"])
             st.markdown(line)
 
-    if charts_rendered < 2:
+    # 3. SÉCURITÉ : Si l'IA a oublié de mettre la balise, on en génère un seul automatiquement
+    if not chart_rendered:
         st.markdown("---")
-        st.caption(t["chart_complementary"])
-        c1, c2 = st.columns(2)
-        if charts_rendered == 0:
-            with c1: display_requested_chart("STYLE_BARRES", report_label, "force_chart_1")
-            with c2: display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, "force_chart_2")
-        elif charts_rendered == 1:
-            display_requested_chart("STYLE_DONUT_OU_LIGNE", report_label, "force_chart_2")
-
+        st.caption("📊 Graphique Complémentaire (Généré automatiquement)")
+        display_requested_chart("STYLE_BARRES", report_label, "force_single_chart")
 uploaded_file = st.file_uploader(t["choose_pdf"], type="pdf")
 st.write(t["example_pdf"])
 
@@ -511,9 +457,10 @@ if "last_analysis_result" not in st.session_state and "last_analyzed_path" in st
 
 elif selected_example_label is not None and selected_example is not None:
     if not os.path.exists(selected_example):
-        if st.session_state["lang"] == "EN": st.error(f"File '{selected_example_label}' not found.")
-        elif st.session_state["lang"] == "ES": st.error(f"Archivo '{selected_example_label}' no encontrado.")
-        else: st.error(f"Fichier d'exemple introuvable pour '{selected_example_label}'.")
+        if st.session_state["lang"] == "EN":
+            st.error(f"File '{selected_example_label}' not found.")
+        else:
+            st.error(f"Fichier d'exemple introuvable pour '{selected_example_label}'.")
     else:
         run_analysis(selected_example)
 
@@ -530,7 +477,8 @@ if "last_analysis_result" in st.session_state:
     result = st.session_state["last_analysis_result"]
     active_report = st.session_state.get("active_label", "Analyse")
     st.markdown("---")
-    render_dynamic_content_with_strict_two_charts(
+    # Appel de la nouvelle fonction pour le graphique unique
+    render_dynamic_content_with_single_chart(
         result.get("analysis", ""), 
         result.get("summary", ""), 
         active_report

@@ -452,20 +452,30 @@ def resolve_sample_path(filename: str) -> str | None:
 example_reports = {label: resolve_sample_path(filename) for label, filename in sample_files.items()}
 
 cols = st.columns(len(example_reports))
-selected_example = None
-selected_example_label = st.session_state.get("active_label", None)
 
 for col, (label, path) in zip(cols, example_reports.items()):
     with col:
         sub_col1, sub_col2 = st.columns([3, 1])
         with sub_col1:
             if st.button(label, use_container_width=True, key=f"btn_ex_{label}"):
-                # CORRECTION SÉCURITÉ : On vide le cache persistant de l'ancienne analyse
-                if "last_analysis_result" in st.session_state:
-                    del st.session_state["last_analysis_result"]
-                selected_example = path
-                selected_example_label = label
-                st.session_state["active_label"] = label
+                if not path or not os.path.exists(path):
+                    if st.session_state.get("lang") == "EN":
+                        st.error(f"File '{label}' not found.")
+                    else:
+                        st.error(f"Fichier d'exemple introuvable pour '{label}'.")
+                else:
+                    # 1. On vide le cache persistant de l'ancienne analyse
+                    if "last_analysis_result" in st.session_state:
+                        del st.session_state["last_analysis_result"]
+                    
+                    # 2. On mémorise de façon persistante le document actif et son chemin
+                    st.session_state["active_label"] = label
+                    st.session_state["last_analyzed_path"] = path
+                    
+                    # 3. EXÉCUTION IMMÉDIATE : Lie l'analyse de manière stricte au clic sur ce bouton précis
+                    run_analysis(path)
+                    st.rerun()
+                    
         with sub_col2:
             if path and os.path.exists(path):
                 with open(path, "rb") as f:
@@ -473,21 +483,8 @@ for col, (label, path) in zip(cols, example_reports.items()):
             else:
                 st.caption("❌")
 
-# --- EXECUTION / AUTO-RELANCE SI LE DOCUMENT EST DÉJÀ INITIALISÉ DANS UNE AUTRE LANGUE ---
-if "last_analysis_result" not in st.session_state and "last_analyzed_path" in st.session_state:
-    # Déclenchement automatique immédiat lors du changement de langue via l'en-tête
-    run_analysis(st.session_state["last_analyzed_path"])
-
-elif selected_example_label is not None and selected_example is not None:
-    if not os.path.exists(selected_example):
-        if st.session_state["lang"] == "EN":
-            st.error(f"File '{selected_example_label}' not found.")
-        else:
-            st.error(f"Fichier d'exemple introuvable pour '{selected_example_label}'.")
-    else:
-        run_analysis(selected_example)
-
-elif uploaded_file and st.button(t["btn_analysis"]):
+# --- EXECUTION POUR UPLOAD DE FICHIER PERSO ---
+if uploaded_file and st.button(t["btn_analysis"]):
     # CORRECTION SÉCURITÉ : On supprime l'ancien historique en cache si on uploade un nouveau fichier
     if "last_analysis_result" in st.session_state:
         del st.session_state["last_analysis_result"]
@@ -495,15 +492,21 @@ elif uploaded_file and st.button(t["btn_analysis"]):
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
     st.session_state["active_label"] = "Custom Upload"
+    st.session_state["last_analyzed_path"] = tmp_path
     run_analysis(tmp_path)
     if os.path.exists(tmp_path): os.unlink(tmp_path)
 
-# Rendu persistant basé sur l'état de session sécurisé
+# --- AUTO-RELANCE UNIQUEMENT LORS D'UN CHANGEMENT DE LANGUE VIA L'EN-TÊTE ---
+# Si le résultat a été effacé (changement de langue) mais qu'un fichier était en cours de consultation
+if "last_analysis_result" not in st.session_state and "last_analyzed_path" in st.session_state:
+    run_analysis(st.session_state["last_analyzed_path"])
+
+# --- RENDU PERSISTANT BASÉ SUR L'ÉTAT DE SESSION SÉCURISÉ ---
 if "last_analysis_result" in st.session_state:
     result = st.session_state["last_analysis_result"]
     active_report = st.session_state.get("active_label", "Analyse")
     st.markdown("---")
-    # Appel de la nouvelle fonction pour le graphique unique
+    # Appel de la fonction pour le rendu du graphique unique
     render_dynamic_content_with_single_chart(
         result.get("analysis", ""), 
         result.get("summary", ""), 

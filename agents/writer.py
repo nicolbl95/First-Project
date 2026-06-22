@@ -46,18 +46,24 @@ def write_summary(state):
         analysis = state.get("analysis", "")
         raw_text = state.get("raw_text", "")
         lang = state.get("language", "FR")
+        # Vérification des clés alternatives injectées par app.py
+        if state.get("lang") == "EN" or state.get("target_language") == "EN":
+            lang = "EN"
     else:
         analysis = state.analysis
         raw_text = getattr(state, "raw_text", "")
         lang = getattr(state, "language", "FR")
+        if getattr(state, "lang", "FR") == "EN" or getattr(state, "target_language", "FR") == "EN":
+            lang = "EN"
 
-    # --- SÉCURITÉ ANTI-PERTE D'ÉTAT ---
-    # Si l'état 'language' a été vidé par un agent précédent, on vérifie la consigne système dans le texte
-    if "TARGET_LANGUAGE=English" in raw_text or "language': 'EN'" in str(state) or lang == "EN":
+    # --- SÉCURITÉ ANTI-PERTE D'ÉTAT RENFORCÉE ---
+    # Si l'une des variables ou le texte brut indique l'anglais, on passe en mode EN
+    state_str = str(state)
+    if "TARGET_LANGUAGE=English" in raw_text or "'EN'" in state_str or '"EN"' in state_str or lang == "EN":
         lang = "EN"
     else:
         lang = "FR"
-    # ----------------------------------
+    # --------------------------------------------
 
     # 2. Adaptation dynamique des instructions du Prompt selon la langue ciblée
     if lang == "EN":
@@ -88,12 +94,13 @@ def write_summary(state):
     # 3. PROMPT : Séparation stricte et instructions 100% dans la langue cible
     prompt = f"""You are a world-class financial communication expert.
 CRITICAL LANGUAGE DIRECTIVE: You must write the entire output, response, headers, and executive summary exclusively in {target_language_name}. Do NOT use any other language than {target_language_name}.
+If the provided context or analysis is in another language, translate it on the fly and output EVERYTHING strictly in {target_language_name}.
 
 {instruction_text}
 
 {critique_text}
 
-Detailed Analysis:
+Detailed Analysis (Translate if necessary to match the directive):
 {analysis}"""
 
     summary_genere = None

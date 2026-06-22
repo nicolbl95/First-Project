@@ -422,14 +422,9 @@ def render_dynamic_content_with_single_chart(analysis_text, summary_text, report
             st.markdown(line)
 
     # 3. SÉCURITÉ : Si l'IA a oublié de mettre la balise, on en génère un seul automatiquement
+    # MODIFICATION : Le sous-titre 'st.caption' a été supprimé pour épurer l'interface graphique
     if not chart_rendered:
         st.markdown("---")
-        caption_text = (
-            "📊 Additional Chart (Automatically generated)" 
-            if is_english 
-            else "📊 Graphique Complémentaire (Généré automatiquement)"
-        )
-        st.caption(caption_text)
         display_requested_chart("STYLE_BARRES", report_label, "force_single_chart")
 
 uploaded_file = st.file_uploader(t["choose_pdf"], type="pdf")

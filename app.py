@@ -374,6 +374,10 @@ def render_dynamic_content_with_single_chart(analysis_text, summary_text, report
     lines = full_text.split("\n")
     chart_rendered = False  # On passe à un simple indicateur Vrai/Faux
     
+    # Détermination dynamique du préfixe de titre selon la langue
+    is_english = st.session_state.get("lang") == "EN"
+    graph_prefix = "Chart:" if is_english else "Graphique :"
+    
     for idx, line in enumerate(lines):
         if "---SECTION_BREAK---" in line:
             st.markdown("---")
@@ -391,10 +395,11 @@ def render_dynamic_content_with_single_chart(analysis_text, summary_text, report
                     end = line.find("]", start)
                     extracted_title = line[start:end].replace("_", " ")
                 except Exception:
-                    extracted_title = "Analyse Personnalisée"
+                    extracted_title = "Custom Analysis" if is_english else "Analyse Personnalisée"
                 
                 st.markdown("---")
-                st.subheader(f"📊 Graphique : {extracted_title}")
+                # CORRECTION : Utilisation du préfixe dynamique (Chart: ou Graphique:)
+                st.subheader(f"📊 {graph_prefix} {extracted_title}")
                 
                 # 2. On appelle la fonction d'affichage en lui passant le style voulu
                 # On utilise 'report_label' pour garantir que les chiffres dépendent du document chargé !
@@ -412,11 +417,16 @@ def render_dynamic_content_with_single_chart(analysis_text, summary_text, report
     # 3. SÉCURITÉ : Si l'IA a oublié de mettre la balise, on en génère un seul automatiquement
     if not chart_rendered:
         st.markdown("---")
-        st.caption("📊 Graphique Complémentaire (Généré automatiquement)")
+        caption_text = (
+            "📊 Additional Chart (Automatically generated)" 
+            if is_english 
+            else "📊 Graphique Complémentaire (Généré automatiquement)"
+        )
+        st.caption(caption_text)
         display_requested_chart("STYLE_BARRES", report_label, "force_single_chart")
+
 uploaded_file = st.file_uploader(t["choose_pdf"], type="pdf")
 st.write(t["example_pdf"])
-
 sample_dir = os.path.join(project_root, "sample_reports")
 sample_files = {
     "BioSensus 2025": "Rapport_Performance_BioSensus_2025.pdf",

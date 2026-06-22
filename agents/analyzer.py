@@ -92,15 +92,15 @@ Données du document :
     if not analyse_generee:
         if lang == "EN":
             analyse_generee = (
-                "### Risk Analysis (Backup Mode)\n\n"
-                "No AI backend available or generation error. Here is the extracted context:\n\n"
-                f"{contexte_propre}"
+                "### Risk Analysis (Notice)\n\n"
+                "⚠️ *The automated financial analysis for this sample document is currently unavailable in English. "
+                "Please read the English Executive Summary generated right below.*"
             )
         elif lang == "ES":
             analyse_generee = (
-                "### Análisis de Riesgos (Modo de Reserva)\n\n"
-                "No hay backend de IA disponible o error de generación. Aquí está el contexto extraído:\n\n"
-                f"{contexte_propre}"
+                "### Análisis de Riesgos (Aviso)\n\n"
+                "⚠️ *El análisis financiero automatizado para este documento no está disponible en este momento. "
+                "Consulte el Resumen Ejecutivo en la sección siguiente.*"
             )
         else:
             analyse_generee = (

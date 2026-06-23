@@ -41,12 +41,18 @@ L'application permet aux utilisateurs de télécharger des PDF ou de sélectionn
 - **Streamlit** : Interface web interactive.
 - **Docker** : Conteneurisation pour un déploiement portable.
 
-## Comment lancer le projet
-1. Cloner le dépôt : `git clone https://github.com/nicolbl95/First-Project`
-2. Créer l'environnement virtuel : `python -m venv venv` puis l'activer
-3. Installer les dépendances : `pip install -r requirements.txt`
-4. Installer Ollama et télécharger Llama 3 : `ollama pull llama3`
-5. Lancer : `streamlit run app.py`
+## 🚀 Comment lancer le projet
 
-## Démo en ligne
-[Lien Streamlit Community Cloud — à ajouter à l'étape 5.3]
+### **Prérequis**
+- **Python 3.14** installé (vérifiez avec `python --version`).
+- **Ollama** installé (pour une utilisation locale) : [Télécharger Ollama](https://ollama.com).
+- **Docker** (optionnel, pour une exécution conteneurisée) : [Télécharger Docker Desktop](https://www.docker.com/products/docker-desktop).
+
+---
+
+### **Étapes d'installation et d'exécution**
+
+1. **Cloner le dépôt** :
+   ```bash
+   git clone https://github.com/nicolbl95/First-Project
+   cd First-Project

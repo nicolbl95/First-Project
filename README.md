@@ -1,26 +1,31 @@
 # 📊 Assistant IA Multi-Agents — Analyse Financière
 
 ![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)
 ![RAG](https://img.shields.io/badge/RAG-7B3FE4?style=for-the-badge&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-121212?style=for-the-badge&logo=langchain&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-1C1E26?style=for-the-badge&logo=langchain&logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-0073EC?style=for-the-badge&logo=databricks&logoColor=white)
 ![Ollama Llama3](https://img.shields.io/badge/Ollama-Llama_3-black?style=for-the-badge&logo=ollama&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-00D4AA?style=for-the-badge&logo=groq&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
-
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ## Description
-Application web qui analyse automatiquement des rapports financiers PDF
-grâce à une architecture multi-agents (LangGraph + RAG + ChromaDB).
+Application web **conteneurisée avec Docker** qui analyse automatiquement des rapports financiers PDF
+grâce à une architecture multi-agents (LangGraph + LangChain + RAG + ChromaDB).
 
 ## Technologies utilisées
 - Python 3.14
+- VS Code (éditeur de code)
 - RAG (Retrieval-Augmented Generation)
 - LangGraph (orchestration d'agents IA)
+- LangChain (framework LLM)
 - ChromaDB (base de données vectorielle / RAG)
-- Groq (accélération LLM)
 - Ollama — Llama 3 (LLM local)
+- Groq (accélération LLM)
 - Streamlit (interface web)
+- Docker (conteneurisation)
 
 ## Comment lancer le projet
 1. Cloner le dépôt : `git clone https://github.com/nicolbl95/First-Project`

@@ -10,7 +10,6 @@
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-0073EC?style=for-the-badge\&logo=databricks\&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge\&logo=ollama\&logoColor=white)
 ![Groq API](https://img.shields.io/badge/Groq_API-00D4AA?style=for-the-badge\&logo=groq\&logoColor=white)
-
 [![🚀 Démo Live](https://img.shields.io/badge/%F0%9F%9A%80_D%C3%A9mo_Live-Streamlit_Cloud-FF4B4B?style=for-the-badge)](https://multiagent-financial-analyzer.streamlit.app/)
 
 ---
